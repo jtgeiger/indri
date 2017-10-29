@@ -20,6 +20,12 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    //Remove duplicate files in cling jars.
+    packagingOptions {
+        exclude 'META-INF/beans.xml'
+    }
+
 }
 
 dependencies {
@@ -31,4 +37,12 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+    compile 'io.reactivex.rxjava2:rxjava:2.1.6'
+    compile 'io.reactivex.rxjava2:rxkotlin:2.1.0'
+    compile 'org.fourthline.cling:cling-core:2.1.1'
+    compile 'org.fourthline.cling:cling-support:2.1.1'
+    runtimeOnly 'org.eclipse.jetty:jetty-server:8.1.22.v20160922'
+    runtimeOnly 'org.eclipse.jetty:jetty-servlet:8.1.22.v20160922'
+    runtimeOnly 'org.eclipse.jetty:jetty-client:8.1.22.v20160922'
+    runtimeOnly 'org.slf4j:slf4j-jdk14:1.7.25'
 }

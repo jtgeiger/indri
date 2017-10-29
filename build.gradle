@@ -19,6 +19,7 @@ allprojects {
     repositories {
         google()
         jcenter()
+        mavenLocal()    //For Cling built and installed locally. TODO: Get from an online repo.
     }
 }
 
