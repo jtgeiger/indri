@@ -3,41 +3,44 @@ package com.sibilantsolutions.indri.android
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.content_main.*
 import org.fourthline.cling.android.AndroidUpnpServiceImpl
 import org.fourthline.cling.android.FixedAndroidLogHandler
 
+class MainActivity : AppCompatActivity() {
 
-class MainActivity : AppCompatActivity(), SearchContract.View {
-
-    private val presenter = SearchPresenter()
+    private lateinit var searchContractPresenter: SearchContract.Presenter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
-        }
+        val searchContractView = fragment as SearchContract.View
+        searchContractPresenter = SearchPresenter(searchContractView)
 
+        fab.setOnClickListener { view ->
+            searchContractPresenter.search()
+        }
 
         // Fix the logging integration between java.util.logging and Android internal logging
         org.seamless.util.logging.LoggingUtil.resetRootHandler(
                 FixedAndroidLogHandler()
         )
+        // Now you can enable logging as needed for various categories of Cling:
+        // Logger.getLogger("org.fourthline.cling").setLevel(Level.FINEST);
 
         // This will start the UPnP service if it wasn't already started
         applicationContext.bindService(
                 Intent(this, AndroidUpnpServiceImpl::class.java),
-                presenter.sc(),
+                searchContractPresenter.sc(),
                 Context.BIND_AUTO_CREATE
         )
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -58,9 +61,9 @@ class MainActivity : AppCompatActivity(), SearchContract.View {
 
     override fun onDestroy() {
         super.onDestroy()
-        presenter.onDestroy()
+        searchContractPresenter.onDestroy()
         // This will stop the UPnP service if nobody else is bound to it
-        applicationContext.unbindService(presenter.sc())
+        applicationContext.unbindService(searchContractPresenter.sc())
     }
 
 }

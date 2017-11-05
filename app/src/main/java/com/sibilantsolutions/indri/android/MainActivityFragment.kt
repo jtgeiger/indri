@@ -1,6 +1,7 @@
 package com.sibilantsolutions.indri.android
 
 import android.os.Bundle
+import android.support.design.widget.Snackbar
 import android.support.v4.app.Fragment
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -10,9 +11,20 @@ import android.view.ViewGroup
 import android.widget.TextView
 import kotlinx.android.synthetic.main.fragment_main.*
 import kotlinx.android.synthetic.main.recycler_view_row.view.*
+import org.fourthline.cling.model.meta.Device
 
 
-class MainActivityFragment : Fragment() {
+class MainActivityFragment : Fragment(), SearchContract.View {
+
+    private val myAdapter = MyAdapter(arrayListOf())
+
+    override fun addDevice(device: Device<*, *, *>) {
+        myAdapter.devices.add(device)
+//        val lastIndex = myAdapter.devices.lastIndex
+//        myAdapter.notifyItemInserted(lastIndex)
+//        myAdapter.notifyItemChanged(lastIndex)
+        myAdapter.notifyDataSetChanged()
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -26,18 +38,29 @@ class MainActivityFragment : Fragment() {
 
         recycler_view.setHasFixedSize(true)
 
-        val myAdapter = MyAdapter(arrayListOf("Foo", "Bar"))
         recycler_view.adapter = myAdapter
     }
 
-    private class MyAdapter(val strs: MutableList<String>) : RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
+    override fun snackbar(msg: String) {
+        Snackbar.make(view!!, msg, Snackbar.LENGTH_LONG).setAction("Action", null).show()
+    }
+
+    private class MyAdapter(val devices: MutableList<Device<*, *, *>>) : RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
+
+        init {
+            setHasStableIds(true)
+        }
+
+        override fun getItemId(position: Int): Long {
+            return devices[position].identity.udn.hashCode().toLong()
+        }
 
         override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
-            holder.bind(strs[position])
+            holder.bind(devices[position])
         }
 
         override fun getItemCount(): Int {
-            return strs.size
+            return devices.size
         }
 
         override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): MyViewHolder {
@@ -52,8 +75,8 @@ class MainActivityFragment : Fragment() {
             // enabling experimental features and I don't currently want to do that.
             private val textView: TextView = myRow.textView
 
-            fun bind(s: String) {
-                textView.text = s
+            fun bind(device: Device<*, *, *>) {
+                textView.text = device.details.friendlyName
             }
         }
 
