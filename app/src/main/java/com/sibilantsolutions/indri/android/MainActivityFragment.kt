@@ -12,6 +12,7 @@ import android.widget.TextView
 import kotlinx.android.synthetic.main.fragment_main.*
 import kotlinx.android.synthetic.main.recycler_view_row.view.*
 import org.fourthline.cling.model.meta.Device
+import org.fourthline.cling.model.types.UDAServiceType
 
 
 class MainActivityFragment : Fragment(), SearchContract.View {
@@ -74,9 +75,15 @@ class MainActivityFragment : Fragment(), SearchContract.View {
             // always use findViewById under the hood.  Could instead implement LayoutContainer but that requires
             // enabling experimental features and I don't currently want to do that.
             private val textView: TextView = myRow.textView
+            private val textView2: TextView = myRow.textView2
+            private val textView3: TextView = myRow.textView3
+            private val textView4: TextView = myRow.textView4
 
             fun bind(device: Device<*, *, *>) {
                 textView.text = device.details.friendlyName
+                textView2.text = device.embeddedDevices.size.toString()
+                textView3.text = device.services.size.toString()
+                textView4.text = (device.findService(UDAServiceType("ContentDirectory")) != null).toString()
             }
         }
 
