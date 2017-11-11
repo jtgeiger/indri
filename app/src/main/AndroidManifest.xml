@@ -3,11 +3,11 @@
     package="com.sibilantsolutions.indri.android">
 
     <!-- Permissions needed for Cling: -->
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
-    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:allowBackup="true"
@@ -27,8 +27,17 @@
             </intent-filter>
         </activity>
 
-        <service android:name="org.fourthline.cling.android.AndroidUpnpServiceImpl"/>
+        <service android:name="org.fourthline.cling.android.AndroidUpnpServiceImpl" />
 
+        <activity
+            android:name=".BrowseActivity"
+            android:label="@string/title_activity_browse"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.sibilantsolutions.indri.android.MainActivity" />
+        </activity>
     </application>
 
 </manifest>

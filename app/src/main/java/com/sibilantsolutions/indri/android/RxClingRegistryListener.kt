@@ -74,7 +74,7 @@ class RxClingRegistryListener(val upnpService: UpnpService) {
 
 }
 
-class ClingEvent(val clingEventType: ClingEventType, val registry: Registry, val device: Device<*, *, *>)
+data class ClingEvent(val clingEventType: ClingEventType, val registry: Registry, val device: Device<*, *, *>)
 
 enum class ClingEventType {
     remoteDeviceDiscoveryStarted,

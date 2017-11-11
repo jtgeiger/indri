@@ -13,9 +13,16 @@ import kotlinx.android.synthetic.main.fragment_main.*
 import kotlinx.android.synthetic.main.recycler_view_row.view.*
 import org.fourthline.cling.model.meta.Device
 import org.fourthline.cling.model.types.UDAServiceType
+import org.fourthline.cling.support.model.DIDLContent
 
 
 class MainActivityFragment : Fragment(), SearchContract.View {
+
+    private lateinit var presenter: SearchContract.Presenter
+
+    override fun setSearchContractPresenter(searchPresenter: SearchContract.Presenter) {
+        presenter = searchPresenter
+    }
 
     private val myAdapter = MyAdapter(arrayListOf())
 
@@ -46,7 +53,11 @@ class MainActivityFragment : Fragment(), SearchContract.View {
         Snackbar.make(view!!, msg, Snackbar.LENGTH_LONG).setAction("Action", null).show()
     }
 
-    private class MyAdapter(val devices: MutableList<Device<*, *, *>>) : RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
+    override fun show(didl: DIDLContent) {
+        startActivity(BrowseActivity.newIntent(didl, context))
+    }
+
+    private inner class MyAdapter(val devices: MutableList<Device<*, *, *>>) : RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
 
         init {
             setHasStableIds(true)
@@ -57,7 +68,11 @@ class MainActivityFragment : Fragment(), SearchContract.View {
         }
 
         override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
-            holder.bind(devices[position])
+            val device = devices[position]
+            holder.bind(device)
+            if (device.findService(UDAServiceType("ContentDirectory")) != null) {
+                holder.itemView.setOnClickListener { presenter.browse(device) }
+            }
         }
 
         override fun getItemCount(): Int {
@@ -70,7 +85,7 @@ class MainActivityFragment : Fragment(), SearchContract.View {
             return MyViewHolder(myRow)
         }
 
-        private class MyViewHolder(myRow: View) : RecyclerView.ViewHolder(myRow) {
+        private inner class MyViewHolder(myRow: View) : RecyclerView.ViewHolder(myRow) {
             //Cache the child view(s) because the Kotlin Android Extension won't currently cache custom views and
             // always use findViewById under the hood.  Could instead implement LayoutContainer but that requires
             // enabling experimental features and I don't currently want to do that.

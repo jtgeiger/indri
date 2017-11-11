@@ -6,13 +6,15 @@ import android.os.IBinder
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import org.fourthline.cling.android.AndroidUpnpService
+import org.fourthline.cling.model.meta.Device
+import org.fourthline.cling.model.types.UDAServiceType
 
 /**
  * Created by jt on 10/29/17.
  */
 class SearchPresenter constructor(private val searchContractView: SearchContract.View) : SearchContract.Presenter {
 
-    private var upnpService: AndroidUpnpService? = null
+    private var androidUpnpService: AndroidUpnpService? = null
 
     private var registryListenerDisposable: Disposable? = null
 
@@ -21,7 +23,7 @@ class SearchPresenter constructor(private val searchContractView: SearchContract
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
 
             val localUpnpService = service as AndroidUpnpService
-            upnpService = localUpnpService
+            androidUpnpService = localUpnpService
 
             // Now add all devices to the list we already know about
             for (device in localUpnpService.registry.devices) {
@@ -41,7 +43,7 @@ class SearchPresenter constructor(private val searchContractView: SearchContract
         override fun onServiceDisconnected(className: ComponentName) {
             registryListenerDisposable?.dispose()
             registryListenerDisposable = null
-            upnpService = null
+            androidUpnpService = null
         }
     }
 
@@ -49,12 +51,25 @@ class SearchPresenter constructor(private val searchContractView: SearchContract
 
     override fun search() {
         searchContractView.snackbar("Searching network...")
-        upnpService?.controlPoint!!.search()
+        androidUpnpService?.controlPoint!!.search()
     }
 
     override fun onDestroy() {
         registryListenerDisposable?.dispose()
         registryListenerDisposable = null
     }
-    
+
+    override fun browse(device: Device<*, *, *>) {
+        val upnpService = androidUpnpService?.get()
+
+        if (upnpService != null) {
+            browse(device.findService(UDAServiceType("ContentDirectory")), "0", upnpService)
+                    .map { it.didl }
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                            { didl -> searchContractView.show(didl) },
+                            { t -> searchContractView.snackbar("Problem browsing") })
+        }
+    }
+
 }

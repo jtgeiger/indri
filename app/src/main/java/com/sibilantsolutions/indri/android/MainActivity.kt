@@ -22,6 +22,7 @@ class MainActivity : AppCompatActivity() {
 
         val searchContractView = fragment as SearchContract.View
         searchContractPresenter = SearchPresenter(searchContractView)
+        searchContractView.setSearchContractPresenter(searchContractPresenter)
 
         fab.setOnClickListener { view ->
             searchContractPresenter.search()
