@@ -3,6 +3,7 @@ package com.sibilantsolutions.indri.android
 import android.content.ComponentName
 import android.content.ServiceConnection
 import android.os.IBinder
+import android.util.Log
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import org.fourthline.cling.android.AndroidUpnpService
@@ -68,7 +69,10 @@ class SearchPresenter constructor(private val searchContractView: SearchContract
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
                             { didl -> searchContractView.show(didl) },
-                            { t -> searchContractView.snackbar("Problem browsing") })
+                            { t ->
+                                searchContractView.snackbar("Problem browsing")
+                                Log.e("cling", "Trouble browsing:", t)
+                            })
         }
     }
 
