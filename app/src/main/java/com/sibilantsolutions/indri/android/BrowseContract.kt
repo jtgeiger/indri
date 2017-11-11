@@ -1,6 +1,7 @@
 package com.sibilantsolutions.indri.android
 
 import android.content.ServiceConnection
+import org.fourthline.cling.model.ServiceReference
 
 /**
  * Created by jt on 10/29/17.
@@ -8,16 +9,16 @@ import android.content.ServiceConnection
 interface BrowseContract {
 
     interface View {
-        fun setContent(containerTitles: List<String>, itemTitles: List<String>)
+        fun setContent(serializableDIDLContent: SerializableDIDLContent, serviceReference: ServiceReference)
     }
 
     interface Presenter {
         fun sc(): ServiceConnection
 
         //TODO HACK: This data should get fetched from a repo.
-        fun setContent(containerTitles: List<String>, itemTitles: List<String>)
+        fun setContent(serializableDIDLContent: SerializableDIDLContent, serviceReference: ServiceReference)
 
-        fun browse(containerId: String)
+        fun browse(containerId: String, serviceReference: ServiceReference)
     }
 
 }

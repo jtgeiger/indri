@@ -5,12 +5,13 @@ import android.content.Intent
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
-import io.reactivex.Observable
+import com.sibilantsolutions.indri.android.SerializableDIDLContent.Companion.mapToSerializable
 import kotlinx.android.synthetic.main.activity_browse.*
 import kotlinx.android.synthetic.main.content_main.*
 import org.fourthline.cling.android.AndroidUpnpServiceImpl
+import org.fourthline.cling.model.ServiceReference
+import org.fourthline.cling.model.meta.Service
 import org.fourthline.cling.support.model.DIDLContent
-import org.fourthline.cling.support.model.container.StorageFolder
 
 class BrowseActivity : AppCompatActivity() {
 
@@ -18,24 +19,21 @@ class BrowseActivity : AppCompatActivity() {
 
     companion object {
 
-        private const val EXTRA_CONTAINERS = "EXTRA_CONTAINERS"
-        private const val EXTRA_ITEMS = "EXTRA_ITEMS"
+        private const val EXTRA_DIDL_CONTENT = "EXTRA_DIDL_CONTENT"
+        private const val EXTRA_SERVICE_REFERENCE = "EXTRA_SERVICE_REFERENCE"
 
-        fun newIntent(didl: DIDLContent, ctx: Context): Intent {
+        fun newIntent(didl: DIDLContent, service: Service<*, *>, ctx: Context): Intent {
             val intent = Intent(ctx, BrowseActivity::class.java)
 
-            //TODO: Create a SerializableDIDLContent class.  Or fetch from repository.
+            val serializableDIDLContent = mapToSerializable(didl)
 
-            val containerTitles = Observable.fromIterable(didl.containers).filter { StorageFolder.CLASS.equals(it) }.map { it.title }
-                    .toList().map { ArrayList(it) }.blockingGet()
-            intent.putStringArrayListExtra("${ctx.packageName}.$EXTRA_CONTAINERS", containerTitles)
+            intent.putExtra("${ctx.packageName}.$EXTRA_DIDL_CONTENT", serializableDIDLContent)
 
-            val itemTitles = Observable.fromIterable(didl.items).map { it.title }
-                    .toList().map { ArrayList(it) }.blockingGet()
-            intent.putStringArrayListExtra("${ctx.packageName}.$EXTRA_ITEMS", itemTitles)
+            intent.putExtra("${ctx.packageName}.$EXTRA_SERVICE_REFERENCE", service.reference.toString())
 
             return intent
         }
+
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,10 +58,11 @@ class BrowseActivity : AppCompatActivity() {
                 Context.BIND_AUTO_CREATE
         )
 
-        val containerTitles = intent.getStringArrayListExtra("$packageName.$EXTRA_CONTAINERS")
-        val itemTitles = intent.getStringArrayListExtra("$packageName.$EXTRA_ITEMS")
+        val serializableDIDLContent = intent.getSerializableExtra("${packageName}.$EXTRA_DIDL_CONTENT")
+                as SerializableDIDLContent
+        val serviceReference = ServiceReference(intent.getStringExtra("${packageName}.$EXTRA_SERVICE_REFERENCE"))
 
-        browseContractPresenter.setContent(containerTitles, itemTitles)
+        browseContractPresenter.setContent(serializableDIDLContent, serviceReference)
 
     }
 

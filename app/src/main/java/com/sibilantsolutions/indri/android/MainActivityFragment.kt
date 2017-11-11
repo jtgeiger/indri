@@ -12,6 +12,7 @@ import android.widget.TextView
 import kotlinx.android.synthetic.main.fragment_main.*
 import kotlinx.android.synthetic.main.recycler_view_row.view.*
 import org.fourthline.cling.model.meta.Device
+import org.fourthline.cling.model.meta.Service
 import org.fourthline.cling.model.types.UDAServiceType
 import org.fourthline.cling.support.model.DIDLContent
 
@@ -49,8 +50,8 @@ class MainActivityFragment : Fragment(), SearchContract.View {
         Snackbar.make(view!!, msg, Snackbar.LENGTH_LONG).setAction("Action", null).show()
     }
 
-    override fun show(didl: DIDLContent) {
-        startActivity(BrowseActivity.newIntent(didl, context))
+    override fun show(didl: DIDLContent, service: Service<*, *>) {
+        startActivity(BrowseActivity.newIntent(didl, service, context))
     }
 
     private inner class MyAdapter(val devices: MutableList<Device<*, *, *>>) : RecyclerView.Adapter<MyAdapter.MyViewHolder>() {

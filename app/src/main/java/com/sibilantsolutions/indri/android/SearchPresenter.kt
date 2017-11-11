@@ -64,11 +64,12 @@ class SearchPresenter constructor(private val searchContractView: SearchContract
         val upnpService = androidUpnpService?.get()
 
         if (upnpService != null) {
-            browse(device.findService(UDAServiceType("ContentDirectory")), "0", upnpService)
+            val service = device.findService(UDAServiceType("ContentDirectory"))
+            browse(service, "0", upnpService)
                     .map { it.didl }
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
-                            { didl -> searchContractView.show(didl) },
+                            { didl -> searchContractView.show(didl, service) },
                             { t ->
                                 searchContractView.snackbar("Problem browsing")
                                 Log.e("cling", "Trouble browsing:", t)

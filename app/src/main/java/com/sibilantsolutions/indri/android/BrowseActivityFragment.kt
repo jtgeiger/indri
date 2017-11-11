@@ -8,9 +8,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import io.reactivex.Observable
 import kotlinx.android.synthetic.main.fragment_main.*
 import kotlinx.android.synthetic.main.recycler_view_row.view.*
+import org.fourthline.cling.model.ServiceReference
 
 /**
  * A placeholder fragment containing a simple view.
@@ -26,7 +26,9 @@ class BrowseActivityFragment : Fragment(), BrowseContract.View {
 
     private val myAdapter = MyAdapter(arrayListOf())
 
-    inner class MyAdapter(val list: MutableList<MyBaseContent>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    inner class MyAdapter(val list: MutableList<SerializableDIDLContent.Parent>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
+        lateinit var serviceReference: ServiceReference
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
 
@@ -39,8 +41,8 @@ class BrowseActivityFragment : Fragment(), BrowseContract.View {
 
         override fun getItemViewType(position: Int): Int {
             return when (list[position]) {
-                is MyContainer -> CONTAINER_TYPE
-                is MyItem -> ITEM_TYPE
+                is SerializableDIDLContent.Container -> CONTAINER_TYPE
+                is SerializableDIDLContent.Item -> ITEM_TYPE
                 else -> throw RuntimeException("Unexpected type")
             }
         }
@@ -48,8 +50,10 @@ class BrowseActivityFragment : Fragment(), BrowseContract.View {
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
             val item = list[position]
             when (item) {
-                is MyContainer -> { (holder as MyContainerViewHolder).bind(item); holder.itemView.setOnClickListener { presenter.browse(item.id) } }
-                is MyItem -> (holder as MyItemViewHolder).bind(item)
+                is SerializableDIDLContent.Container -> {
+                    (holder as MyContainerViewHolder).bind(item)
+                    holder.itemView.setOnClickListener { presenter.browse(item.id, serviceReference) } }
+                is SerializableDIDLContent.Item -> (holder as MyItemViewHolder).bind(item)
                 else -> throw RuntimeException("Unexpected item type")
             }
         }
@@ -67,7 +71,7 @@ class BrowseActivityFragment : Fragment(), BrowseContract.View {
 //        private val textView3: TextView = myRow.textView3
 //        private val textView4: TextView = myRow.textView4
 
-        fun bind(item: MyContainer) {
+        fun bind(item: SerializableDIDLContent.Container) {
             textView.text = item.title
 //            textView2.text = device.embeddedDevices.size.toString()
 //            textView3.text = device.services.size.toString()
@@ -84,7 +88,7 @@ class BrowseActivityFragment : Fragment(), BrowseContract.View {
 //        private val textView3: TextView = myRow.textView3
 //        private val textView4: TextView = myRow.textView4
 
-        fun bind(item: MyItem) {
+        fun bind(item: SerializableDIDLContent.Item) {
             textView.text = item.title
 //            textView2.text = device.embeddedDevices.size.toString()
 //            textView3.text = device.services.size.toString()
@@ -108,19 +112,13 @@ class BrowseActivityFragment : Fragment(), BrowseContract.View {
         recycler_view.adapter = myAdapter
     }
 
-    override fun setContent(containerTitles: List<String>, itemTitles: List<String>) {
+    override fun setContent(serializableDIDLContent: SerializableDIDLContent, serviceReference: ServiceReference) {
+
+        myAdapter.serviceReference = serviceReference
         myAdapter.list.clear()
-        //TODO: Fix how these are being created to use the correct values.
-        Observable.fromIterable(containerTitles).map { MyContainer(it, "fake1", "fake2") }
-                .forEach { myAdapter.list.add(it) }
-        Observable.fromIterable(itemTitles).map { MyItem(it, "fake1", "fake2") }
-                .forEach { myAdapter.list.add(it) }
+        myAdapter.list.addAll(serializableDIDLContent.containers)
+        myAdapter.list.addAll(serializableDIDLContent.items)
         myAdapter.notifyDataSetChanged()
     }
-
-    abstract class MyBaseContent(val title: String, val id: String, val parentId: String)
-
-    class MyContainer(title: String, id: String, parentId: String) : MyBaseContent(title, id, parentId)
-    class MyItem(title: String, id: String, parentId: String) : MyBaseContent(title, id, parentId)
 
 }

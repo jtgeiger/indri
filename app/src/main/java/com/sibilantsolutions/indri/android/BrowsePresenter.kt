@@ -4,7 +4,9 @@ import android.content.ComponentName
 import android.content.ServiceConnection
 import android.os.IBinder
 import android.util.Log
+import io.reactivex.android.schedulers.AndroidSchedulers
 import org.fourthline.cling.android.AndroidUpnpService
+import org.fourthline.cling.model.ServiceReference
 
 /**
  * Created by jt on 11/11/17.
@@ -27,12 +29,22 @@ class BrowsePresenter(private val browseContractView: BrowseContract.View) : Bro
 
     override fun sc() = serviceConnection
 
-    override fun setContent(containerTitles: List<String>, itemTitles: List<String>) {
-        browseContractView.setContent(containerTitles, itemTitles)
+    override fun setContent(serializableDIDLContent: SerializableDIDLContent, serviceReference: ServiceReference) {
+        browseContractView.setContent(serializableDIDLContent, serviceReference)
     }
 
-    override fun browse(containerId: String) {
-        Log.i("cling", "Request to browse cont id=$containerId")
+    override fun browse(containerId: String, serviceReference: ServiceReference) {
+        val upnpService = androidUpnpService?.get()
+        if (upnpService != null) {
+            val service = upnpService.registry.getService(serviceReference)
+            com.sibilantsolutions.indri.android.browse(service, containerId, upnpService)
+                    .map { SerializableDIDLContent.mapToSerializable(it.didl) }
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                            { browseContractView.setContent(it, serviceReference) },
+                            { Log.e("cling", "Browse problem:", it) }
+                    )
+        }
     }
 
 }
