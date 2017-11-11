@@ -47,7 +47,7 @@ class RxClingRegistryListener(val upnpService: UpnpService) {
                         }
 
                         override fun beforeShutdown(registry: Registry?) {
-                            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+                            Log.d("cling", "Registry is about to shut down.")
                         }
 
                         override fun remoteDeviceRemoved(registry: Registry?, device: RemoteDevice?) {
