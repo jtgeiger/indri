@@ -12,7 +12,6 @@ interface SearchContract {
     interface View {
         fun addDevice(device: Device<*, *, *>)
         fun snackbar(msg: String)
-        fun setSearchContractPresenter(searchPresenter: SearchContract.Presenter)
         fun show(didl: DIDLContent)
     }
 

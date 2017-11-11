@@ -20,13 +20,11 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        val searchContractView = fragment as SearchContract.View
+        val searchContractView = fragment as MainActivityFragment
         searchContractPresenter = SearchPresenter(searchContractView)
-        searchContractView.setSearchContractPresenter(searchContractPresenter)
+        searchContractView.presenter = searchContractPresenter
 
-        fab.setOnClickListener { view ->
-            searchContractPresenter.search()
-        }
+        fab.setOnClickListener { searchContractPresenter.search() }
 
         // Fix the logging integration between java.util.logging and Android internal logging
         org.seamless.util.logging.LoggingUtil.resetRootHandler(

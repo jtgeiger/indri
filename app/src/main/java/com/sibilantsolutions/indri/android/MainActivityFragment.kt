@@ -18,11 +18,7 @@ import org.fourthline.cling.support.model.DIDLContent
 
 class MainActivityFragment : Fragment(), SearchContract.View {
 
-    private lateinit var presenter: SearchContract.Presenter
-
-    override fun setSearchContractPresenter(searchPresenter: SearchContract.Presenter) {
-        presenter = searchPresenter
-    }
+    lateinit var presenter: SearchContract.Presenter
 
     private val myAdapter = MyAdapter(arrayListOf())
 
