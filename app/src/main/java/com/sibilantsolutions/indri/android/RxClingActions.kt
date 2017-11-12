@@ -1,10 +1,13 @@
 package com.sibilantsolutions.indri.android
 
+import io.reactivex.Completable
 import io.reactivex.Single
 import org.fourthline.cling.UpnpService
 import org.fourthline.cling.model.action.ActionInvocation
 import org.fourthline.cling.model.message.UpnpResponse
 import org.fourthline.cling.model.meta.Service
+import org.fourthline.cling.support.avtransport.callback.Play
+import org.fourthline.cling.support.avtransport.callback.SetAVTransportURI
 import org.fourthline.cling.support.contentdirectory.callback.Browse
 import org.fourthline.cling.support.model.BrowseFlag
 import org.fourthline.cling.support.model.DIDLContent
@@ -39,3 +42,45 @@ fun browse(service: Service<*, *>, containerId: String, upnpService: UpnpService
 }
 
 data class BrowseResult(val actionInvocation: ActionInvocation<*>, val didl: DIDLContent)
+
+
+fun setUri(service: Service<*, *>, uri: String, upnpService: UpnpService): Completable {
+
+    return Completable.create { emitter ->
+        val setAVTransportURICallback = object : SetAVTransportURI(service, uri) {
+
+            override fun success(invocation: ActionInvocation<*>?) {
+                super.success(invocation)
+                emitter.onComplete()
+            }
+
+            override fun failure(invocation: ActionInvocation<*>, operation: UpnpResponse, defaultMsg: String) {
+                emitter.onError(RuntimeException("setUri failed; operation=$operation, defaultMsg=$defaultMsg"))
+            }
+        }
+
+        val future = upnpService.controlPoint.execute(setAVTransportURICallback)
+
+        emitter.setCancellable { future.cancel(false) }
+    }
+}
+
+fun play(service: Service<*, *>, upnpService: UpnpService): Completable {
+    return Completable.create { emitter ->
+        val playCallback = object : Play(service) {
+            override fun success(invocation: ActionInvocation<*>?) {
+                super.success(invocation)
+                emitter.onComplete()
+            }
+
+            override fun failure(invocation: ActionInvocation<*>, operation: UpnpResponse, defaultMsg: String) {
+                emitter.onError(RuntimeException("play failed; operation=$operation, defaultMsg=$defaultMsg"))
+            }
+        }
+
+        val future = upnpService.controlPoint.execute(playCallback)
+
+        emitter.setCancellable { future.cancel(false) }
+
+    }
+}

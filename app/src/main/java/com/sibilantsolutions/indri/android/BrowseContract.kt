@@ -19,6 +19,7 @@ interface BrowseContract {
         fun setContent(serializableDIDLContent: SerializableDIDLContent, serviceReference: ServiceReference)
 
         fun browse(containerId: String, serviceReference: ServiceReference)
+        fun play(resValue: String)
     }
 
 }

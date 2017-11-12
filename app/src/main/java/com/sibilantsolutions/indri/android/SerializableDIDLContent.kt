@@ -3,6 +3,7 @@ package com.sibilantsolutions.indri.android
 import io.reactivex.Observable
 import org.fourthline.cling.support.model.DIDLContent
 import org.fourthline.cling.support.model.container.StorageFolder
+import org.fourthline.cling.support.model.item.MusicTrack
 import java.io.Serializable
 
 /**
@@ -15,7 +16,8 @@ class SerializableDIDLContent(val containers: List<Container>, val items: List<I
 
     class Container(id: String, parentId: String, title: String) : Parent(id, parentId, title)
 
-    class Item(id: String, parentId: String, title: String) : Parent(id, parentId, title)
+    class Item(id: String, parentId: String, title: String, val creator: String, val resValue: String, val duration: String)
+        : Parent(id, parentId, title)
 
     companion object {
 
@@ -27,7 +29,9 @@ class SerializableDIDLContent(val containers: List<Container>, val items: List<I
                     .blockingGet()
 
             val itemTitles = Observable.fromIterable(didl.items)
-                    .map { SerializableDIDLContent.Item(it.id, it.parentID, it.title) }
+                    .cast(MusicTrack::class.java)
+                    .map { SerializableDIDLContent.Item(it.id, it.parentID, it.title, it.creator.orEmpty(),
+                            it.resources.first().value, it.resources.first().duration) }
                     .toList()
                     .blockingGet()
 

@@ -53,7 +53,10 @@ class BrowseActivityFragment : Fragment(), BrowseContract.View {
                 is SerializableDIDLContent.Container -> {
                     (holder as MyContainerViewHolder).bind(item)
                     holder.itemView.setOnClickListener { presenter.browse(item.id, serviceReference) } }
-                is SerializableDIDLContent.Item -> (holder as MyItemViewHolder).bind(item)
+                is SerializableDIDLContent.Item -> {
+                    (holder as MyItemViewHolder).bind(item)
+                    holder.itemView.setOnClickListener { presenter.play(item.resValue) }
+                }
                 else -> throw RuntimeException("Unexpected item type")
             }
         }
@@ -84,14 +87,14 @@ class BrowseActivityFragment : Fragment(), BrowseContract.View {
         // always use findViewById under the hood.  Could instead implement LayoutContainer but that requires
         // enabling experimental features and I don't currently want to do that.
         private val textView: TextView = itemView.textView
-//        private val textView2: TextView = myRow.textView2
-//        private val textView3: TextView = myRow.textView3
-//        private val textView4: TextView = myRow.textView4
+        private val textView2: TextView = itemView.textView2
+        private val textView3: TextView = itemView.textView3
+//        private val textView4: TextView = itemView.textView4
 
         fun bind(item: SerializableDIDLContent.Item) {
-            textView.text = item.title
-//            textView2.text = device.embeddedDevices.size.toString()
-//            textView3.text = device.services.size.toString()
+            textView.text = item.creator
+            textView2.text = item.title
+            textView3.text = "(${item.duration})"
 //            textView4.text = (device.findService(UDAServiceType("ContentDirectory")) != null).toString()
         }
     }
