@@ -60,13 +60,16 @@ class BrowsePresenter(private val browseContractView: BrowseContract.View) : Bro
             val avService = devices.firstOrNull()?.findService(avTransportType)
             if (avService != null) {
                 setUri(avService, resValue, upnpService)
-                        .doOnComplete { Log.i("cling", "Set the uri!") }
-//                        .andThen{ com.sibilantsolutions.indri.android.play(avService, upnpService).doOnComplete { Log.i("cling", "play completed") }.timeout(4, TimeUnit.SECONDS) }
-                        .doOnComplete { Log.i("cling", "Started playing!") }
-                        .timeout(10, TimeUnit.SECONDS)
+                        .timeout(7, TimeUnit.SECONDS)
                         .subscribe(
-                                { Log.i("cling", "Playing!") },
-                                { Log.e("cling", "Trouble with seturi/play:", it) }
+                                { Log.i("cling", "setUri!")
+                                    com.sibilantsolutions.indri.android.play(avService, upnpService)
+                                            .timeout(2, TimeUnit.SECONDS)
+                                            .subscribe(
+                                                    { Log.i("cling", "play!") },
+                                                    { Log.e("cling", "Trouble with play:", it) })
+                                },
+                                { Log.e("cling", "Trouble with seturi:", it) }
                         )
             } else {
                 Log.e("cling", "No viable devices.")
