@@ -8,6 +8,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import io.reactivex.Observable
+import io.reactivex.schedulers.Schedulers
+import io.reactivex.subjects.PublishSubject
+import io.reactivex.subjects.Subject
 import kotlinx.android.synthetic.main.fragment_main.*
 import kotlinx.android.synthetic.main.recycler_view_row.view.*
 import org.fourthline.cling.model.ServiceReference
@@ -18,6 +22,10 @@ import org.fourthline.cling.model.ServiceReference
 class BrowseActivityFragment : Fragment(), BrowseContract.View {
 
     lateinit var presenter: BrowseContract.Presenter
+
+    //TODO: The view should consider this as an Observer, not a Subject, to limit the available methods.
+    //TODO: How to clean this up for lifecycle changes?
+    private val browseSubject: Subject<Pair<String, ServiceReference>> = PublishSubject.create()
 
     companion object Consts {
         private const val CONTAINER_TYPE = 11
@@ -52,7 +60,7 @@ class BrowseActivityFragment : Fragment(), BrowseContract.View {
             when (item) {
                 is SerializableDIDLContent.Container -> {
                     (holder as MyContainerViewHolder).bind(item)
-                    holder.itemView.setOnClickListener { presenter.browse(item.id, serviceReference) } }
+                    holder.itemView.setOnClickListener { browseSubject.onNext(Pair(item.id, serviceReference)) } }
                 is SerializableDIDLContent.Item -> {
                     (holder as MyItemViewHolder).bind(item)
                     holder.itemView.setOnClickListener { presenter.play(item.resValue) }
@@ -123,5 +131,8 @@ class BrowseActivityFragment : Fragment(), BrowseContract.View {
         myAdapter.list.addAll(serializableDIDLContent.items)
         myAdapter.notifyDataSetChanged()
     }
+
+    override fun browseObservable(): Observable<Pair<String, ServiceReference>> =
+            browseSubject.observeOn(Schedulers.io())
 
 }

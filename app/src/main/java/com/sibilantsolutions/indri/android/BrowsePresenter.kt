@@ -29,24 +29,28 @@ class BrowsePresenter(private val browseContractView: BrowseContract.View) : Bro
         }
     }
 
+    init {
+        //TODO: Dispose on lifecycle events.
+        browseContractView.browseObservable()
+                .subscribe({ browse(it.first, it.second)})
+    }
+
     override fun sc() = serviceConnection
 
     override fun setContent(serializableDIDLContent: SerializableDIDLContent, serviceReference: ServiceReference) {
         browseContractView.setContent(serializableDIDLContent, serviceReference)
     }
 
-    override fun browse(containerId: String, serviceReference: ServiceReference) {
-        val upnpService = androidUpnpService?.get()
-        if (upnpService != null) {
-            val service = upnpService.registry.getService(serviceReference)
-            com.sibilantsolutions.indri.android.browse(service, containerId, upnpService)
-                    .map { SerializableDIDLContent.mapToSerializable(it.didl) }
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(
-                            { browseContractView.setContent(it, serviceReference) },
-                            { Log.e("cling", "Browse problem:", it) }
-                    )
-        }
+    private fun browse(containerId: String, serviceReference: ServiceReference) {
+        val upnpService = androidUpnpService?.get() ?: return
+        val service = upnpService.registry.getService(serviceReference)
+        com.sibilantsolutions.indri.android.browse(service, containerId, upnpService)
+                .map { SerializableDIDLContent.mapToSerializable(it.didl) }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        { browseContractView.setContent(it, serviceReference) },
+                        { Log.e("cling", "Browse problem:", it) }
+                )
     }
 
     override fun play(resValue: String) {
