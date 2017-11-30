@@ -58,9 +58,9 @@ class BrowseActivity : AppCompatActivity() {
                 Context.BIND_AUTO_CREATE
         )
 
-        val serializableDIDLContent = intent.getSerializableExtra("${packageName}.$EXTRA_DIDL_CONTENT")
+        val serializableDIDLContent = intent.getSerializableExtra("$packageName.$EXTRA_DIDL_CONTENT")
                 as SerializableDIDLContent
-        val serviceReference = ServiceReference(intent.getStringExtra("${packageName}.$EXTRA_SERVICE_REFERENCE"))
+        val serviceReference = ServiceReference(intent.getStringExtra("$packageName.$EXTRA_SERVICE_REFERENCE"))
 
         browseContractPresenter.setContent(serializableDIDLContent, serviceReference)
 
