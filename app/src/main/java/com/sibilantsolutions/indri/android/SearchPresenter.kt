@@ -52,6 +52,8 @@ class SearchPresenter constructor(private val searchContractView: SearchContract
 
     override fun search() {
         searchContractView.snackbar("Searching network...")
+        //This invokes an async search operation, the results of which will be observable in the
+        // registry: known devices can be iterated and new devices are fired to a listener.
         androidUpnpService?.controlPoint!!.search()
     }
 
