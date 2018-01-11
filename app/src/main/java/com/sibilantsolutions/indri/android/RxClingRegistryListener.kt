@@ -15,7 +15,7 @@ import java.lang.Exception
 /**
  * Created by jt on 11/2/17.
  */
-class RxClingRegistryListener(val upnpService: UpnpService) {
+class RxClingRegistryListener(private val upnpService: UpnpService) {
 
 
     fun registryListener(): Flowable<ClingEvent> {
@@ -84,7 +84,7 @@ enum class ClingEventType {
     remoteDeviceRemoved,
     localDeviceAdded,
     localDeviceRemoved,
-    beforeShutdown,
+//    beforeShutdown,
     //afterShutdown,
     ;
 }
