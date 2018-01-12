@@ -10,6 +10,7 @@ dependencies {
     implementation 'io.reactivex.rxjava2:rxkotlin:2.2.0'
     implementation 'org.fourthline.cling:cling-core:2.1.1'
     implementation 'org.fourthline.cling:cling-support:2.1.1'
+    implementation 'javax.inject:javax.inject:1'
 }
 
 sourceCompatibility = "1.7"
