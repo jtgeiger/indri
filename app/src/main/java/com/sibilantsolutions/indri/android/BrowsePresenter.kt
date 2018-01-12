@@ -53,6 +53,11 @@ class BrowsePresenter(private val browseContractView: BrowseContract.View) : Bro
                 )
     }
 
+    /**
+     * @param resValue String resource name of the media to play, like an HTML anchor target URL.
+     * This is given to the renderer who is then responsible for fetching it over the network and
+     * starting playback.
+     */
     override fun play(resValue: String) {
         Log.i("cling", "Want to play $resValue.")
         val upnpService = androidUpnpService?.get()
@@ -61,7 +66,12 @@ class BrowsePresenter(private val browseContractView: BrowseContract.View) : Bro
 
             val devices = upnpService.registry.getDevices(avTransportType)
             Log.i("cling", "Devices=$devices")
+
+            //1/11/18: This is sketchy -- picking any arbitrary device with an AVTransport service.
+            //The device here is the renderer, i.e. a playback device like a receiver.  We should
+            // allow this to be selected by the user in case there are multiple.
             val avService = devices.firstOrNull()?.findService(avTransportType)
+
             if (avService != null) {
                 setUri(avService, resValue, upnpService)
                         .timeout(7, TimeUnit.SECONDS)
