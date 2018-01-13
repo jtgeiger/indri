@@ -1,7 +1,7 @@
 package com.sibilantsolutions.indri.domain.usecase
 
 import com.sibilantsolutions.indri.domain.usecase.ClingBrowse.BrowseResult
-import io.reactivex.Observable
+import io.reactivex.Flowable
 import io.reactivex.Single
 import org.fourthline.cling.support.model.DIDLContent
 import org.fourthline.cling.support.model.container.Container
@@ -12,41 +12,43 @@ import org.fourthline.cling.support.model.container.StorageFolder
  */
 class ClingSpider(private val clingBrowse: ClingBrowse) {
 
-    fun spider(containerId: String): Observable<DIDLContent> {
+    fun spider(containerId: String): Flowable<DIDLContent> {
 
         //Browse the root container.
         val rootResult: Single<BrowseResult> = clingBrowse.browse(containerId)
 
+        val flowable: Flowable<BrowseResult> = rootResult.toFlowable()
+
         //Recurse on the root container to traverse the whole graph
-        val allResults: Observable<BrowseResult> =
-                rootResult.flatMapObservable { recurse(it) }
+        val allResults: Flowable<BrowseResult> =
+                flowable.flatMap { recurse(it) }
 
         //For convenience, return the DIDLs instead of the BrowseResult.
         return allResults.map { it.didl }
     }
 
-    private fun recurse(browseResult: BrowseResult) : Observable<BrowseResult> {
+    private fun recurse(browseResult: BrowseResult) : Flowable<BrowseResult> {
 
         //Get all the containers from the DIDL; there may be zero or more.
-        val didlContainers: Observable<Container> =
-                Observable.fromIterable(browseResult.didl.containers)
+        val didlContainers: Flowable<Container> =
+                Flowable.fromIterable(browseResult.didl.containers)
 
         //Get just the StorageFolder containers; there may be zero or more.
-        val storageFolders: Observable<StorageFolder> =
+        val storageFolders: Flowable<StorageFolder> =
                 didlContainers
                         .filter { StorageFolder.CLASS.equals(it) }
                         .cast(StorageFolder::class.java)
 
         //For each storage folder, browse into each of its children.
-        val children: Observable<BrowseResult> =
+        val children: Flowable<BrowseResult> =
                 storageFolders
                         .flatMapSingle { clingBrowse.browse(it.id) }
 
         //Now recurse for each of the children.  If there were zero children, the recursion stops.
-        val recurse: Observable<BrowseResult> = children.flatMap { recurse(it) }
+        val recurse: Flowable<BrowseResult> = children.flatMap { recurse(it) }
 
         //Finally concat the source result with the tree of results for its children.
-        return Observable.concat(Observable.just(browseResult), recurse)
+        return Flowable.concat(Flowable.just(browseResult), recurse)
     }
 
 }

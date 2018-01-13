@@ -1,7 +1,7 @@
 package com.sibilantsolutions.indri.domain.usecase
 
 import com.sibilantsolutions.indri.domain.usecase.ClingBrowse.BrowseResult
-import io.reactivex.Observable
+import io.reactivex.Flowable
 import io.reactivex.Single
 import org.fourthline.cling.model.action.ActionInvocation
 import org.fourthline.cling.model.meta.Action
@@ -47,11 +47,19 @@ class ClingSpiderTest {
                     .addItem(MusicTrack("0/A2/b_id", "0/A2_id", "A2:b", null, null, null as String?, null))
                     .addItem(MusicTrack("0/A2/c_id", "0/A2_id", "A2:c", null, null, null as String?, null))
             ,
-            //"0/A3_id" has zero sub folders and three items.  This is a leaf.
+            //"0/A3_id" has one sub folders and three items.
             "0/A3_id" to DIDLContent()
+                    .addContainer(StorageFolder("0/A3/B1_id", "0/A3_id", "A3:B1", null, null, null))
                     .addItem(MusicTrack("0/A3/a_id", "0/A3_id", "A3:a", null, null, null as String?, null))
                     .addItem(MusicTrack("0/A3/b_id", "0/A3_id", "A3:b", null, null, null as String?, null))
                     .addItem(MusicTrack("0/A3/c_id", "0/A3_id", "A3:c", null, null, null as String?, null))
+            ,
+            //"0/A3/B1_id" has one sub folders and zero items.
+            "0/A3/B1_id" to DIDLContent()
+                    .addContainer(StorageFolder("0/A3/B1/C1_id", "0/A3/B1_id", "A3:B1:C1", null, null, null))
+            ,
+            //"0/A3/B1/C1_id" has one zero folders and zero items.  This is an empty leaf.
+            "0/A3/B1/C1_id" to DIDLContent()
     )
 
     @Test
@@ -60,12 +68,19 @@ class ClingSpiderTest {
         configClingBrowseMock(clingBrowse)
 
         val clingSpider = ClingSpider(clingBrowse)
-        val result: Observable<DIDLContent> = clingSpider.spider("0")
+        val result: Flowable<DIDLContent> = clingSpider.spider("0")
 
         val list: List<DIDLContent> = result.toList().blockingGet()
 
-        //Five DIDLContent entries.
-        assertEquals(list.toString(), 5, list.size)
+        //7 DIDLContent entries.
+        assertEquals(list.toString(), 7, list.size)
+
+        assertEquals(6, list.flatMap { it.containers }.size)
+
+        val tracks = list.flatMap { it.items }
+
+        assertEquals(12, tracks.size)
+
 
         //TODO: More tests.
     }
