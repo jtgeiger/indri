@@ -4,6 +4,7 @@ import android.content.ComponentName
 import android.content.ServiceConnection
 import android.os.IBinder
 import android.util.Log
+import com.sibilantsolutions.indri.domain.usecase.cling.ClingBrowseImpl
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import org.fourthline.cling.android.AndroidUpnpService
@@ -67,7 +68,7 @@ class SearchPresenter constructor(private val searchContractView: SearchContract
 
         if (upnpService != null) {
             val service = device.findService(UDAServiceType("ContentDirectory"))
-            browse(service, "0", upnpService)
+            ClingBrowseImpl(service, upnpService.controlPoint).browse("0")
                     .map { it.didl }
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(

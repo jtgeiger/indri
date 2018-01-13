@@ -4,6 +4,9 @@ import android.content.ComponentName
 import android.content.ServiceConnection
 import android.os.IBinder
 import android.util.Log
+import com.sibilantsolutions.indri.domain.usecase.cling.ClingBrowseImpl
+import com.sibilantsolutions.indri.domain.usecase.cling.ClingPlayImpl
+import com.sibilantsolutions.indri.domain.usecase.cling.ClingSetUriImpl
 import io.reactivex.android.schedulers.AndroidSchedulers
 import org.fourthline.cling.android.AndroidUpnpService
 import org.fourthline.cling.model.ServiceReference
@@ -44,7 +47,7 @@ class BrowsePresenter(private val browseContractView: BrowseContract.View) : Bro
     private fun browse(containerId: String, serviceReference: ServiceReference) {
         val upnpService = androidUpnpService?.get() ?: return
         val service = upnpService.registry.getService(serviceReference)
-        com.sibilantsolutions.indri.android.browse(service, containerId, upnpService)
+        ClingBrowseImpl(service, upnpService.controlPoint).browse(containerId)
                 .map { SerializableDIDLContent.mapToSerializable(it.didl) }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
@@ -73,11 +76,11 @@ class BrowsePresenter(private val browseContractView: BrowseContract.View) : Bro
             val avService = devices.firstOrNull()?.findService(avTransportType)
 
             if (avService != null) {
-                setUri(avService, resValue, upnpService)
+                ClingSetUriImpl(avService, upnpService.controlPoint).setUri(resValue)
                         .timeout(7, TimeUnit.SECONDS)
                         .subscribe(
                                 { Log.i("cling", "setUri!")
-                                    com.sibilantsolutions.indri.android.play(avService, upnpService)
+                                    ClingPlayImpl(avService, upnpService.controlPoint).play()
                                             .timeout(2, TimeUnit.SECONDS)
                                             .subscribe(
                                                     { Log.i("cling", "play!") },

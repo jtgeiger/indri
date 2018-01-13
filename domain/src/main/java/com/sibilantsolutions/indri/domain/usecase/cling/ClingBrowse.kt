@@ -1,4 +1,4 @@
-package com.sibilantsolutions.indri.domain.usecase
+package com.sibilantsolutions.indri.domain.usecase.cling
 
 import io.reactivex.Single
 import org.fourthline.cling.model.action.ActionInvocation

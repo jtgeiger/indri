@@ -1,6 +1,6 @@
-package com.sibilantsolutions.indri.domain.usecase
+package com.sibilantsolutions.indri.domain.usecase.cling
 
-import com.sibilantsolutions.indri.domain.usecase.ClingBrowse.BrowseResult
+import com.sibilantsolutions.indri.domain.usecase.cling.ClingBrowse.BrowseResult
 import io.reactivex.Single
 import org.fourthline.cling.controlpoint.ControlPoint
 import org.fourthline.cling.model.action.ActionInvocation
