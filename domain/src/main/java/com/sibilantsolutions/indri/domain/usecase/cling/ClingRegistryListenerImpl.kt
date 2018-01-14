@@ -1,10 +1,8 @@
-package com.sibilantsolutions.indri.android
+package com.sibilantsolutions.indri.domain.usecase.cling
 
-import android.util.Log
 import io.reactivex.BackpressureStrategy
 import io.reactivex.Flowable
 import io.reactivex.FlowableEmitter
-import org.fourthline.cling.UpnpService
 import org.fourthline.cling.model.meta.Device
 import org.fourthline.cling.model.meta.LocalDevice
 import org.fourthline.cling.model.meta.RemoteDevice
@@ -15,19 +13,18 @@ import java.lang.Exception
 /**
  * Created by jt on 11/2/17.
  */
-class RxClingRegistryListener(private val upnpService: UpnpService) {
+class ClingRegistryListenerImpl(private val registry: Registry) {
 
-
-    fun registryListener(): Flowable<ClingEvent> {
+    fun registryListener(): Flowable<ClingRegistryEvent> {
         return Flowable.create(
-                { emitter: FlowableEmitter<ClingEvent> ->
+                { emitter: FlowableEmitter<ClingRegistryEvent> ->
                     val registryListener = object: RegistryListener {
                         override fun localDeviceRemoved(registry: Registry?, device: LocalDevice?) {
-                            emitter.onNext(ClingEvent(ClingEventType.localDeviceRemoved, registry!!, device!!))
+                            emitter.onNext(ClingRegistryEvent(ClingRegistryEventType.localDeviceRemoved, registry!!, device!!))
                         }
 
                         override fun remoteDeviceDiscoveryStarted(registry: Registry?, device: RemoteDevice?) {
-                            emitter.onNext(ClingEvent(ClingEventType.remoteDeviceDiscoveryStarted, registry!!, device!!))
+                            emitter.onNext(ClingRegistryEvent(ClingRegistryEventType.remoteDeviceDiscoveryStarted, registry!!, device!!))
                         }
 
                         override fun remoteDeviceDiscoveryFailed(registry: Registry?, device: RemoteDevice?, ex: Exception?) {
@@ -39,32 +36,32 @@ class RxClingRegistryListener(private val upnpService: UpnpService) {
                         }
 
                         override fun remoteDeviceAdded(registry: Registry?, device: RemoteDevice?) {
-                            emitter.onNext(ClingEvent(ClingEventType.remoteDeviceAdded, registry!!, device!!))
+                            emitter.onNext(ClingRegistryEvent(ClingRegistryEventType.remoteDeviceAdded, registry!!, device!!))
                         }
 
                         override fun remoteDeviceUpdated(registry: Registry?, device: RemoteDevice?) {
-                            emitter.onNext(ClingEvent(ClingEventType.remoteDeviceUpdated, registry!!, device!!))
+                            emitter.onNext(ClingRegistryEvent(ClingRegistryEventType.remoteDeviceUpdated, registry!!, device!!))
                         }
 
                         override fun beforeShutdown(registry: Registry?) {
-                            Log.d("cling", "Registry is about to shut down.")
+                            //No-op.
                         }
 
                         override fun remoteDeviceRemoved(registry: Registry?, device: RemoteDevice?) {
-                            emitter.onNext(ClingEvent(ClingEventType.remoteDeviceRemoved, registry!!, device!!))
+                            emitter.onNext(ClingRegistryEvent(ClingRegistryEventType.remoteDeviceRemoved, registry!!, device!!))
                         }
 
                         override fun localDeviceAdded(registry: Registry?, device: LocalDevice?) {
-                            emitter.onNext(ClingEvent(ClingEventType.localDeviceAdded, registry!!, device!!))
+                            emitter.onNext(ClingRegistryEvent(ClingRegistryEventType.localDeviceAdded, registry!!, device!!))
                         }
 
                     }
 
-                    emitter.setCancellable({
-                        Log.i("cling", "The emitter has been cancelled.")
-                        upnpService.registry.removeListener(registryListener) })
+                    emitter.setCancellable {
+                        registry.removeListener(registryListener)
+                    }
 
-                    upnpService.registry.addListener(registryListener)
+                    registry.addListener(registryListener)
                 },
                 BackpressureStrategy.BUFFER
         )
@@ -72,19 +69,22 @@ class RxClingRegistryListener(private val upnpService: UpnpService) {
                 .serialize()
     }
 
-}
+    data class ClingRegistryEvent(
+            val clingRegistryEventType: ClingRegistryEventType,
+            val registry: Registry,
+            val device: Device<*, *, *>)
 
-data class ClingEvent(val clingEventType: ClingEventType, val registry: Registry, val device: Device<*, *, *>)
-
-enum class ClingEventType {
-    remoteDeviceDiscoveryStarted,
-    //remoteDeviceDiscoveryFailed,
-    remoteDeviceAdded,
-    remoteDeviceUpdated,
-    remoteDeviceRemoved,
-    localDeviceAdded,
-    localDeviceRemoved,
+    enum class ClingRegistryEventType {
+        remoteDeviceDiscoveryStarted,
+        //remoteDeviceDiscoveryFailed,
+        remoteDeviceAdded,
+        remoteDeviceUpdated,
+        remoteDeviceRemoved,
+        localDeviceAdded,
+        localDeviceRemoved,
 //    beforeShutdown,
-    //afterShutdown,
-    ;
+        //afterShutdown,
+        ;
+    }
+
 }

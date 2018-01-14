@@ -5,6 +5,9 @@ import android.content.ServiceConnection
 import android.os.IBinder
 import android.util.Log
 import com.sibilantsolutions.indri.domain.usecase.cling.ClingBrowseImpl
+import com.sibilantsolutions.indri.domain.usecase.cling.ClingRegistryListenerImpl
+import com.sibilantsolutions.indri.domain.usecase.cling.ClingRegistryListenerImpl.ClingRegistryEventType.localDeviceAdded
+import com.sibilantsolutions.indri.domain.usecase.cling.ClingRegistryListenerImpl.ClingRegistryEventType.remoteDeviceAdded
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import org.fourthline.cling.android.AndroidUpnpService
@@ -32,12 +35,15 @@ class SearchPresenter constructor(private val searchContractView: SearchContract
                 searchContractView.addDevice(device)
             }
 
-            val registryListener = RxClingRegistryListener(localUpnpService.get()).registryListener()
+            val registryListener = ClingRegistryListenerImpl(localUpnpService.get().registry).registryListener()
 
             registryListenerDisposable = registryListener
                     .filter { clingEvent ->
-                        clingEvent.clingEventType == ClingEventType.remoteDeviceAdded
-                                || clingEvent.clingEventType == ClingEventType.localDeviceAdded }
+                        when (clingEvent.clingRegistryEventType) {
+                            remoteDeviceAdded, localDeviceAdded -> true
+                            else -> false
+                        }
+                    }
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe({ clingEvent -> searchContractView.addDevice(clingEvent.device) })
         }
