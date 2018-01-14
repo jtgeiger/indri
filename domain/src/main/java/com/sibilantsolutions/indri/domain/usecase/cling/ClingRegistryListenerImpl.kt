@@ -1,9 +1,10 @@
 package com.sibilantsolutions.indri.domain.usecase.cling
 
+import com.sibilantsolutions.indri.domain.usecase.cling.ClingRegistryListener.ClingRegistryEvent
+import com.sibilantsolutions.indri.domain.usecase.cling.ClingRegistryListener.ClingRegistryEventType
 import io.reactivex.BackpressureStrategy
 import io.reactivex.Flowable
 import io.reactivex.FlowableEmitter
-import org.fourthline.cling.model.meta.Device
 import org.fourthline.cling.model.meta.LocalDevice
 import org.fourthline.cling.model.meta.RemoteDevice
 import org.fourthline.cling.registry.Registry
@@ -13,9 +14,9 @@ import java.lang.Exception
 /**
  * Created by jt on 11/2/17.
  */
-class ClingRegistryListenerImpl(private val registry: Registry) {
+class ClingRegistryListenerImpl(private val registry: Registry) : ClingRegistryListener {
 
-    fun registryListener(): Flowable<ClingRegistryEvent> {
+    override fun registryListener(): Flowable<ClingRegistryEvent> {
         return Flowable.create(
                 { emitter: FlowableEmitter<ClingRegistryEvent> ->
                     val registryListener = object: RegistryListener {
@@ -67,24 +68,6 @@ class ClingRegistryListenerImpl(private val registry: Registry) {
         )
                 //Cling callback methods can fire on any thread so we need to serialize.
                 .serialize()
-    }
-
-    data class ClingRegistryEvent(
-            val clingRegistryEventType: ClingRegistryEventType,
-            val registry: Registry,
-            val device: Device<*, *, *>)
-
-    enum class ClingRegistryEventType {
-        remoteDeviceDiscoveryStarted,
-        //remoteDeviceDiscoveryFailed,
-        remoteDeviceAdded,
-        remoteDeviceUpdated,
-        remoteDeviceRemoved,
-        localDeviceAdded,
-        localDeviceRemoved,
-//    beforeShutdown,
-        //afterShutdown,
-        ;
     }
 
 }

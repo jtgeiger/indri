@@ -5,9 +5,9 @@ import android.content.ServiceConnection
 import android.os.IBinder
 import android.util.Log
 import com.sibilantsolutions.indri.domain.usecase.cling.ClingBrowseImpl
+import com.sibilantsolutions.indri.domain.usecase.cling.ClingRegistryListener.ClingRegistryEventType.localDeviceAdded
+import com.sibilantsolutions.indri.domain.usecase.cling.ClingRegistryListener.ClingRegistryEventType.remoteDeviceAdded
 import com.sibilantsolutions.indri.domain.usecase.cling.ClingRegistryListenerImpl
-import com.sibilantsolutions.indri.domain.usecase.cling.ClingRegistryListenerImpl.ClingRegistryEventType.localDeviceAdded
-import com.sibilantsolutions.indri.domain.usecase.cling.ClingRegistryListenerImpl.ClingRegistryEventType.remoteDeviceAdded
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import org.fourthline.cling.android.AndroidUpnpService
