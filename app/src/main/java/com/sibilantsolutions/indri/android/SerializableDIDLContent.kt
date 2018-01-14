@@ -23,13 +23,13 @@ class SerializableDIDLContent(val containers: List<Container>, val items: List<I
 
         fun mapToSerializable(didl: DIDLContent): SerializableDIDLContent {
             val containers = Observable.fromIterable(didl.containers)
-                    .filter { StorageFolder.CLASS.equals(it) }
+                    .ofType(StorageFolder::class.java)
                     .map { SerializableDIDLContent.Container(it.id, it.parentID, it.title) }
                     .toList()
                     .blockingGet()
 
             val itemTitles = Observable.fromIterable(didl.items)
-                    .cast(MusicTrack::class.java)
+                    .ofType(MusicTrack::class.java)
                     .map { SerializableDIDLContent.Item(it.id, it.parentID, it.title, it.creator.orEmpty(),
                             it.resources.first().value, it.resources.first().duration) }
                     .toList()

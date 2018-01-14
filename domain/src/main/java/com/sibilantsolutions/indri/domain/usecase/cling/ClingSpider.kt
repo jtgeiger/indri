@@ -36,8 +36,7 @@ class ClingSpider(private val clingBrowse: ClingBrowse) {
         //Get just the StorageFolder containers; there may be zero or more.
         val storageFolders: Flowable<StorageFolder> =
                 didlContainers
-                        .filter { StorageFolder.CLASS.equals(it) }
-                        .cast(StorageFolder::class.java)
+                        .ofType(StorageFolder::class.java)
 
         //For each storage folder, browse into each of its children.
         val children: Flowable<BrowseResult> =
