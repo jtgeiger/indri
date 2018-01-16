@@ -3,7 +3,6 @@ package com.sibilantsolutions.indri.android
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 import com.sibilantsolutions.indri.android.SerializableDIDLContent.Companion.mapToSerializable
 import kotlinx.android.synthetic.main.activity_browse.*
@@ -22,10 +21,10 @@ class BrowseActivity : AppCompatActivity() {
         private const val EXTRA_DIDL_CONTENT = "EXTRA_DIDL_CONTENT"
         private const val EXTRA_SERVICE_REFERENCE = "EXTRA_SERVICE_REFERENCE"
 
-        fun newIntent(didl: DIDLContent, service: Service<*, *>, ctx: Context): Intent {
+        fun newIntent(containerId: String, didl: DIDLContent, service: Service<*, *>, ctx: Context): Intent {
             val intent = Intent(ctx, BrowseActivity::class.java)
 
-            val serializableDIDLContent = mapToSerializable(didl)
+            val serializableDIDLContent = mapToSerializable(containerId, didl)
 
             intent.putExtra("${ctx.packageName}.$EXTRA_DIDL_CONTENT", serializableDIDLContent)
 
@@ -41,10 +40,6 @@ class BrowseActivity : AppCompatActivity() {
         setContentView(R.layout.activity_browse)
         setSupportActionBar(toolbar)
 
-        fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
-        }
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         val browseContractView = fragment as BrowseActivityFragment
@@ -63,6 +58,8 @@ class BrowseActivity : AppCompatActivity() {
         val serviceReference = ServiceReference(intent.getStringExtra("$packageName.$EXTRA_SERVICE_REFERENCE"))
 
         browseContractPresenter.setContent(serializableDIDLContent, serviceReference)
+
+        fab.setOnClickListener { browseContractPresenter.spider(serviceReference) }
 
     }
 

@@ -13,7 +13,7 @@ interface SearchContract {
     interface View {
         fun addDevice(device: Device<*, *, *>)
         fun snackbar(msg: String)
-        fun show(didl: DIDLContent, service: Service<*, *>)
+        fun show(containerId: String, didl: DIDLContent, service: Service<*, *>)
     }
 
     interface Presenter {

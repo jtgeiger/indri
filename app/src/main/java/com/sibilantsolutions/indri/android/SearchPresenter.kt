@@ -78,7 +78,7 @@ class SearchPresenter constructor(private val searchContractView: SearchContract
                     .map { it.didl }
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
-                            { didl -> searchContractView.show(didl, service) },
+                            { didl -> searchContractView.show("0", didl, service) },
                             { t ->
                                 searchContractView.snackbar("Problem browsing")
                                 Log.e("cling", "Trouble browsing:", t)

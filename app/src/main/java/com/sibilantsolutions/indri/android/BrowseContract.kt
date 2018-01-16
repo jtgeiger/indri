@@ -13,6 +13,9 @@ interface BrowseContract {
         fun setContent(serializableDIDLContent: SerializableDIDLContent, serviceReference: ServiceReference)
 
         fun browseObservable(): Observable<Pair<String, ServiceReference>>
+
+        fun snackbar(msg: String)
+
     }
 
     interface Presenter {
@@ -22,6 +25,8 @@ interface BrowseContract {
         fun setContent(serializableDIDLContent: SerializableDIDLContent, serviceReference: ServiceReference)
 
         fun play(resValue: String)
+
+        fun spider(serviceReference: ServiceReference)
     }
 
 }

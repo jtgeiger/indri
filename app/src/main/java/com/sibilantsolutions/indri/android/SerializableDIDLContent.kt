@@ -10,7 +10,7 @@ import java.io.Serializable
  * Created by jt on 11/11/17.
  */
 
-class SerializableDIDLContent(val containers: List<Container>, val items: List<Item>) : Serializable {
+class SerializableDIDLContent(var containerId: String, val containers: List<Container>, val items: List<Item>) : Serializable {
 
     abstract class AbstractBaseContent protected constructor(val id: String, val parentId: String, val title: String) : Serializable
 
@@ -21,7 +21,7 @@ class SerializableDIDLContent(val containers: List<Container>, val items: List<I
 
     companion object {
 
-        fun mapToSerializable(didl: DIDLContent): SerializableDIDLContent {
+        fun mapToSerializable(containerId: String, didl: DIDLContent): SerializableDIDLContent {
             val containers = Observable.fromIterable(didl.containers)
                     .ofType(StorageFolder::class.java)
                     .map { SerializableDIDLContent.Container(it.id, it.parentID, it.title) }
@@ -35,7 +35,7 @@ class SerializableDIDLContent(val containers: List<Container>, val items: List<I
                     .toList()
                     .blockingGet()
 
-            return SerializableDIDLContent(containers, itemTitles)
+            return SerializableDIDLContent(containerId, containers, itemTitles)
         }
 
     }

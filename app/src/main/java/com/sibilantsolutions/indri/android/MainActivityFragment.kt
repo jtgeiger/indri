@@ -50,8 +50,8 @@ class MainActivityFragment : Fragment(), SearchContract.View {
         Snackbar.make(view!!, msg, Snackbar.LENGTH_LONG).setAction("Action", null).show()
     }
 
-    override fun show(didl: DIDLContent, service: Service<*, *>) {
-        startActivity(BrowseActivity.newIntent(didl, service, context))
+    override fun show(containerId: String, didl: DIDLContent, service: Service<*, *>) {
+        startActivity(BrowseActivity.newIntent(containerId, didl, service, context))
     }
 
     private inner class MyAdapter(val devices: MutableList<Device<*, *, *>>) : RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
