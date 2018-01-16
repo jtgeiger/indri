@@ -40,7 +40,7 @@ class BrowseActivityFragment : Fragment(), BrowseContract.View {
 
     private val myAdapter = MyAdapter(arrayListOf())
 
-    inner class MyAdapter(val list: MutableList<SerializableDIDLContent.Parent>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    inner class MyAdapter(val list: MutableList<SerializableDIDLContent.AbstractBaseContent>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
         lateinit var serviceReference: ServiceReference
 
