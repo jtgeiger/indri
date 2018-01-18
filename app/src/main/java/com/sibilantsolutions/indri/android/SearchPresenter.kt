@@ -6,8 +6,7 @@ import android.os.IBinder
 import android.util.Log
 import android.view.View
 import com.sibilantsolutions.indri.domain.usecase.cling.ClingBrowseImpl
-import com.sibilantsolutions.indri.domain.usecase.cling.ClingRegistryListener.ClingRegistryEventType.localDeviceAdded
-import com.sibilantsolutions.indri.domain.usecase.cling.ClingRegistryListener.ClingRegistryEventType.remoteDeviceAdded
+import com.sibilantsolutions.indri.domain.usecase.cling.ClingRegistryListener.ClingRegistryEventType.*
 import com.sibilantsolutions.indri.domain.usecase.cling.ClingRegistryListenerImpl
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
@@ -45,6 +44,7 @@ class SearchPresenter constructor(private val searchContractView: SearchContract
                     .filter { clingEvent ->
                         when (clingEvent.clingRegistryEventType) {
                             remoteDeviceAdded, localDeviceAdded -> true
+                            remoteDeviceRemoved, localDeviceRemoved -> true
                             else -> false
                         }
                     }
