@@ -15,7 +15,6 @@ import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
 import kotlinx.android.synthetic.main.fragment_main.*
 import kotlinx.android.synthetic.main.recycler_view_row.view.*
-import org.fourthline.cling.model.ServiceReference
 
 /**
  * A placeholder fragment containing a simple view.
@@ -25,11 +24,11 @@ class BrowseActivityFragment : Fragment(), BrowseContract.View {
     lateinit var presenter: BrowseContract.Presenter
 
     //TODO: How to clean this up for lifecycle changes?
-    private val browseObservable: Observable<Pair<String, ServiceReference>>
-    private val browseObserver: Observer<Pair<String, ServiceReference>>
+    private val browseObservable: Observable<Pair<String, String>>
+    private val browseObserver: Observer<Pair<String, String>>
 
     init {
-        val subject = PublishSubject.create<Pair<String, ServiceReference>>()
+        val subject = PublishSubject.create<Pair<String, String>>()
         browseObservable = subject
         browseObserver = subject
     }
@@ -41,9 +40,9 @@ class BrowseActivityFragment : Fragment(), BrowseContract.View {
 
     private val myAdapter = MyAdapter(arrayListOf())
 
-    inner class MyAdapter(val list: MutableList<SerializableDIDLContent.AbstractBaseContent>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    inner class MyAdapter(val list: MutableList<BrowseViewModel.AbstractBaseContent>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-        lateinit var serviceReference: ServiceReference
+        lateinit var serviceId : String
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
 
@@ -56,8 +55,8 @@ class BrowseActivityFragment : Fragment(), BrowseContract.View {
 
         override fun getItemViewType(position: Int): Int {
             return when (list[position]) {
-                is SerializableDIDLContent.Container -> CONTAINER_TYPE
-                is SerializableDIDLContent.Item -> ITEM_TYPE
+                is BrowseViewModel.Container -> CONTAINER_TYPE
+                is BrowseViewModel.Item -> ITEM_TYPE
                 else -> throw RuntimeException("Unexpected type")
             }
         }
@@ -65,10 +64,10 @@ class BrowseActivityFragment : Fragment(), BrowseContract.View {
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
             val item = list[position]
             when (item) {
-                is SerializableDIDLContent.Container -> {
+                is BrowseViewModel.Container -> {
                     (holder as MyContainerViewHolder).bind(item)
-                    holder.itemView.setOnClickListener { browseObserver.onNext(Pair(item.id, serviceReference)) } }
-                is SerializableDIDLContent.Item -> {
+                    holder.itemView.setOnClickListener { browseObserver.onNext(Pair(item.id, serviceId)) } }
+                is BrowseViewModel.Item -> {
                     (holder as MyItemViewHolder).bind(item)
                     holder.itemView.setOnClickListener { presenter.play(item.resValue) }
                 }
@@ -89,7 +88,7 @@ class BrowseActivityFragment : Fragment(), BrowseContract.View {
 //        private val textView3: TextView = myRow.textView3
 //        private val textView4: TextView = myRow.textView4
 
-        fun bind(item: SerializableDIDLContent.Container) {
+        fun bind(item: BrowseViewModel.Container) {
             textView.text = item.title
 //            textView2.text = device.embeddedDevices.size.toString()
 //            textView3.text = device.services.size.toString()
@@ -106,7 +105,7 @@ class BrowseActivityFragment : Fragment(), BrowseContract.View {
         private val textView3: TextView = itemView.textView3
 //        private val textView4: TextView = itemView.textView4
 
-        fun bind(item: SerializableDIDLContent.Item) {
+        fun bind(item: BrowseViewModel.Item) {
             textView.text = item.creator
             textView2.text = item.title
             textView3.text = "(${item.duration})"
@@ -130,16 +129,15 @@ class BrowseActivityFragment : Fragment(), BrowseContract.View {
         recycler_view.adapter = myAdapter
     }
 
-    override fun setContent(serializableDIDLContent: SerializableDIDLContent, serviceReference: ServiceReference) {
-
-        myAdapter.serviceReference = serviceReference
+    override fun render(browseViewModel: BrowseViewModel) {
+        myAdapter.serviceId = browseViewModel.serviceId
         myAdapter.list.clear()
-        myAdapter.list.addAll(serializableDIDLContent.containers)
-        myAdapter.list.addAll(serializableDIDLContent.items)
+        myAdapter.list.addAll(browseViewModel.containers)
+        myAdapter.list.addAll(browseViewModel.items)
         myAdapter.notifyDataSetChanged()
     }
 
-    override fun browseObservable(): Observable<Pair<String, ServiceReference>> =
+    override fun browseObservable(): Observable<Pair<String, String>> =
             browseObservable.observeOn(Schedulers.io())
 
     override fun snackbar(msg: String) {

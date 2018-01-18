@@ -10,9 +10,9 @@ import org.fourthline.cling.model.ServiceReference
 interface BrowseContract {
 
     interface View {
-        fun setContent(serializableDIDLContent: SerializableDIDLContent, serviceReference: ServiceReference)
+        fun render(browseViewModel: BrowseViewModel)
 
-        fun browseObservable(): Observable<Pair<String, ServiceReference>>
+        fun browseObservable(): Observable<Pair<String, String>>
 
         fun snackbar(msg: String)
 

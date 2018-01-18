@@ -48,19 +48,31 @@ class BrowsePresenter(private val browseContractView: BrowseContract.View) : Bro
 
     override fun setContent(serializableDIDLContent: SerializableDIDLContent, serviceReference: ServiceReference) {
         this.containerId = serializableDIDLContent.containerId
-        browseContractView.setContent(serializableDIDLContent, serviceReference)
+        val browseViewModel = BrowseViewModel(
+                serializableDIDLContent.containers
+                    .map { BrowseViewModel.Container(it.id, it.parentId, it.title) },
+                serializableDIDLContent.items
+                        .map { BrowseViewModel.Item(it.id, it.parentId, it.title, it.creator, it.resValue, it.duration) },
+                serviceReference.toString())
+        browseContractView.render(browseViewModel)
     }
 
-    private fun browse(containerId: String, serviceReference: ServiceReference) {
+    private fun browse(containerId: String, serviceId: String) {
         val upnpService = androidUpnpService?.get() ?: return
-        val service = upnpService.registry.getService(serviceReference)
+        val service = upnpService.registry.getService(ServiceReference(serviceId))
         ClingBrowseImpl(service, upnpService.controlPoint).browse(containerId)
                 .map { SerializableDIDLContent.mapToSerializable(containerId, it.didl) }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                         {
                             this.containerId = it.containerId
-                            browseContractView.setContent(it, serviceReference) },
+                            browseContractView.render(BrowseViewModel(
+                                    it.containers
+                                            .map { BrowseViewModel.Container(it.id, it.parentId, it.title) },
+                                    it.items
+                                            .map { BrowseViewModel.Item(it.id, it.parentId, it.title, it.creator, it.resValue, it.duration) },
+                                    serviceId))
+                        },
                         { Log.e("cling", "Browse problem:", it) }
                 )
     }
