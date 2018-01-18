@@ -24,7 +24,7 @@ class BrowsePresenter(private val browseContractView: BrowseContract.View) : Bro
 
     private var androidUpnpService: AndroidUpnpService? = null
 
-    private lateinit var serializableDIDLContent: SerializableDIDLContent
+    private lateinit var containerId: String
 
     private val serviceConnection = object : ServiceConnection {
 
@@ -47,7 +47,7 @@ class BrowsePresenter(private val browseContractView: BrowseContract.View) : Bro
     override fun sc() = serviceConnection
 
     override fun setContent(serializableDIDLContent: SerializableDIDLContent, serviceReference: ServiceReference) {
-        this.serializableDIDLContent = serializableDIDLContent
+        this.containerId = serializableDIDLContent.containerId
         browseContractView.setContent(serializableDIDLContent, serviceReference)
     }
 
@@ -59,7 +59,7 @@ class BrowsePresenter(private val browseContractView: BrowseContract.View) : Bro
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                         {
-                            serializableDIDLContent = it
+                            this.containerId = it.containerId
                             browseContractView.setContent(it, serviceReference) },
                         { Log.e("cling", "Browse problem:", it) }
                 )
@@ -109,7 +109,7 @@ class BrowsePresenter(private val browseContractView: BrowseContract.View) : Bro
         val upnpService = androidUpnpService?.get() ?: return
         val service = upnpService.registry.getService(serviceReference)
         val spider: Flowable<DIDLContent> = ClingSpider(ClingBrowseImpl(service, upnpService.controlPoint))
-                .spider(serializableDIDLContent.containerId)
+                .spider(this.containerId)
         spider
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
