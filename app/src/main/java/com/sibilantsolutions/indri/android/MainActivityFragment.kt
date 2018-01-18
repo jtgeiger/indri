@@ -11,9 +11,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import kotlinx.android.synthetic.main.fragment_main.*
 import kotlinx.android.synthetic.main.recycler_view_row.view.*
-import org.fourthline.cling.model.meta.Device
 import org.fourthline.cling.model.meta.Service
-import org.fourthline.cling.model.types.UDAServiceType
 import org.fourthline.cling.support.model.DIDLContent
 
 
@@ -23,11 +21,9 @@ class MainActivityFragment : Fragment(), SearchContract.View {
 
     private val myAdapter = MyAdapter(arrayListOf())
 
-    override fun addDevice(device: Device<*, *, *>) {
-        myAdapter.devices.add(device)
-//        val lastIndex = myAdapter.devices.lastIndex
-//        myAdapter.notifyItemInserted(lastIndex)
-//        myAdapter.notifyItemChanged(lastIndex)
+    override fun render(searchViewModel: SearchViewModel) {
+        myAdapter.entries.clear()
+        myAdapter.entries.addAll(searchViewModel.entries)
         myAdapter.notifyDataSetChanged()
     }
 
@@ -54,26 +50,23 @@ class MainActivityFragment : Fragment(), SearchContract.View {
         startActivity(BrowseActivity.newIntent(containerId, didl, service, context))
     }
 
-    private inner class MyAdapter(val devices: MutableList<Device<*, *, *>>) : RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
+    private inner class MyAdapter(val entries: MutableList<SearchViewModel.Entry>) : RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
 
         init {
             setHasStableIds(true)
         }
 
         override fun getItemId(position: Int): Long {
-            return devices[position].identity.udn.hashCode().toLong()
+            return entries[position].hashCode().toLong()
         }
 
         override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
-            val device = devices[position]
-            holder.bind(device)
-            if (device.findService(UDAServiceType("ContentDirectory")) != null) {
-                holder.itemView.setOnClickListener { presenter.browse(device) }
-            }
+            val entry = entries[position]
+            holder.bind(entry)
         }
 
         override fun getItemCount(): Int {
-            return devices.size
+            return entries.size
         }
 
         override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): MyViewHolder {
@@ -87,15 +80,17 @@ class MainActivityFragment : Fragment(), SearchContract.View {
             // always use findViewById under the hood.  Could instead implement LayoutContainer but that requires
             // enabling experimental features and I don't currently want to do that.
             private val textView: TextView = myRow.textView
-            private val textView2: TextView = myRow.textView2
-            private val textView3: TextView = myRow.textView3
-            private val textView4: TextView = myRow.textView4
+//            private val textView2: TextView = myRow.textView2
+//            private val textView3: TextView = myRow.textView3
+//            private val textView4: TextView = myRow.textView4
 
-            fun bind(device: Device<*, *, *>) {
-                textView.text = device.details.friendlyName
-                textView2.text = device.embeddedDevices.size.toString()
-                textView3.text = device.services.size.toString()
-                textView4.text = (device.findService(UDAServiceType("ContentDirectory")) != null).toString()
+            fun bind(entry: SearchViewModel.Entry) {
+                textView.text = entry.name
+//                textView2.text = device.embeddedDevices.size.toString()
+//                textView3.text = device.services.size.toString()
+//                textView4.text = (device.findService(UDAServiceType("ContentDirectory")) != null).toString()
+
+                itemView.setOnClickListener(entry.clickListener)
             }
         }
 

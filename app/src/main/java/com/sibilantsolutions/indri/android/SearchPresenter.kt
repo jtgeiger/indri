@@ -4,6 +4,7 @@ import android.content.ComponentName
 import android.content.ServiceConnection
 import android.os.IBinder
 import android.util.Log
+import android.view.View
 import com.sibilantsolutions.indri.domain.usecase.cling.ClingBrowseImpl
 import com.sibilantsolutions.indri.domain.usecase.cling.ClingRegistryListener.ClingRegistryEventType.localDeviceAdded
 import com.sibilantsolutions.indri.domain.usecase.cling.ClingRegistryListener.ClingRegistryEventType.remoteDeviceAdded
@@ -12,6 +13,8 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import org.fourthline.cling.android.AndroidUpnpService
 import org.fourthline.cling.model.meta.Device
+import org.fourthline.cling.model.meta.DeviceIdentity
+import org.fourthline.cling.model.meta.Service
 import org.fourthline.cling.model.types.UDAServiceType
 
 /**
@@ -31,9 +34,10 @@ class SearchPresenter constructor(private val searchContractView: SearchContract
             androidUpnpService = localUpnpService
 
             // Now add all devices to the list we already know about
-            for (device in localUpnpService.registry.devices) {
-                searchContractView.addDevice(device)
-            }
+            val list: List<SearchViewModel.Entry> = mapAllKnownDevicesToEntries(localUpnpService)
+
+            searchContractView.render(SearchViewModel(list))
+
 
             val registryListener = ClingRegistryListenerImpl(localUpnpService.get().registry).registryListener()
 
@@ -45,7 +49,25 @@ class SearchPresenter constructor(private val searchContractView: SearchContract
                         }
                     }
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe({ clingEvent -> searchContractView.addDevice(clingEvent.device) })
+                    .subscribe {
+                        val l = mapAllKnownDevicesToEntries(localUpnpService)
+                        searchContractView.render(SearchViewModel(l))
+                    }
+        }
+
+        private fun mapAllKnownDevicesToEntries(localUpnpService: AndroidUpnpService): List<SearchViewModel.Entry> {
+            return localUpnpService.registry.devices
+                    .map { device -> deviceToEntry(device) }
+        }
+
+        private fun deviceToEntry(device: Device<DeviceIdentity, Device<*, *, *>, Service<*, *>>): SearchViewModel.Entry {
+            return SearchViewModel.Entry(device.details.friendlyName,
+                    View.OnClickListener {
+                        val s = device.findService(UDAServiceType("ContentDirectory"))
+                        if (s != null) {
+                            browse(s)
+                        }
+                    })
         }
 
         override fun onServiceDisconnected(className: ComponentName) {
@@ -69,11 +91,10 @@ class SearchPresenter constructor(private val searchContractView: SearchContract
         registryListenerDisposable = null
     }
 
-    override fun browse(device: Device<*, *, *>) {
+    private fun browse(service: Service<*, *>) {
         val upnpService = androidUpnpService?.get()
 
         if (upnpService != null) {
-            val service = device.findService(UDAServiceType("ContentDirectory"))
             ClingBrowseImpl(service, upnpService.controlPoint).browse("0")
                     .map { it.didl }
                     .observeOn(AndroidSchedulers.mainThread())

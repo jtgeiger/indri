@@ -1,7 +1,6 @@
 package com.sibilantsolutions.indri.android
 
 import android.content.ServiceConnection
-import org.fourthline.cling.model.meta.Device
 import org.fourthline.cling.model.meta.Service
 import org.fourthline.cling.support.model.DIDLContent
 
@@ -11,7 +10,7 @@ import org.fourthline.cling.support.model.DIDLContent
 interface SearchContract {
 
     interface View {
-        fun addDevice(device: Device<*, *, *>)
+        fun render(searchViewModel: SearchViewModel)
         fun snackbar(msg: String)
         fun show(containerId: String, didl: DIDLContent, service: Service<*, *>)
     }
@@ -20,7 +19,6 @@ interface SearchContract {
         fun sc(): ServiceConnection
         fun onDestroy()
         fun search()
-        fun browse(device: Device<*, *, *>)
     }
 
 }
