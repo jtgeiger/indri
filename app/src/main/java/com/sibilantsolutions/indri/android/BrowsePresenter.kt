@@ -15,6 +15,8 @@ import org.fourthline.cling.android.AndroidUpnpService
 import org.fourthline.cling.model.ServiceReference
 import org.fourthline.cling.model.types.UDAServiceType
 import org.fourthline.cling.support.model.DIDLContent
+import org.fourthline.cling.support.model.container.StorageFolder
+import org.fourthline.cling.support.model.item.MusicTrack
 import java.util.concurrent.TimeUnit
 
 /**
@@ -25,6 +27,7 @@ class BrowsePresenter(private val browseContractView: BrowseContract.View) : Bro
     private var androidUpnpService: AndroidUpnpService? = null
 
     private lateinit var containerId: String
+    private lateinit var serviceId: String
 
     private val serviceConnection = object : ServiceConnection {
 
@@ -41,37 +44,29 @@ class BrowsePresenter(private val browseContractView: BrowseContract.View) : Bro
     init {
         //TODO: Dispose on lifecycle events.
         browseContractView.browseObservable()
-                .subscribe({ browse(it.first, it.second)})
+                .subscribe({ browse(it, this.serviceId)})
     }
 
     override fun sc() = serviceConnection
 
-    override fun setContent(serializableDIDLContent: SerializableDIDLContent, serviceReference: ServiceReference) {
-        this.containerId = serializableDIDLContent.containerId
-        val browseViewModel = BrowseViewModel(
-                serializableDIDLContent.containers
-                    .map { BrowseViewModel.Container(it.id, it.parentId, it.title) },
-                serializableDIDLContent.items
-                        .map { BrowseViewModel.Item(it.id, it.parentId, it.title, it.creator, it.resValue, it.duration) },
-                serviceReference.toString())
-        browseContractView.render(browseViewModel)
-    }
+    override fun browse(containerId: String, serviceId: String) {
+        this.containerId = containerId
+        this.serviceId = serviceId
 
-    private fun browse(containerId: String, serviceId: String) {
         val upnpService = androidUpnpService?.get() ?: return
         val service = upnpService.registry.getService(ServiceReference(serviceId))
         ClingBrowseImpl(service, upnpService.controlPoint).browse(containerId)
-                .map { SerializableDIDLContent.mapToSerializable(containerId, it.didl) }
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                         {
-                            this.containerId = it.containerId
                             browseContractView.render(BrowseViewModel(
-                                    it.containers
-                                            .map { BrowseViewModel.Container(it.id, it.parentId, it.title) },
-                                    it.items
-                                            .map { BrowseViewModel.Item(it.id, it.parentId, it.title, it.creator, it.resValue, it.duration) },
-                                    serviceId))
+                                    it.didl.containers
+                                            .filterIsInstance(StorageFolder::class.java)
+                                            .map { BrowseViewModel.Container(it.id, it.parentID, it.title) },
+                                    it.didl.items
+                                            .filterIsInstance(MusicTrack::class.java)
+                                            .map { BrowseViewModel.Item(it.id, it.parentID, it.title, it.creator.orEmpty(), it.resources.first().value, it.resources.first().duration) }))
                         },
                         { Log.e("cling", "Browse problem:", it) }
                 )
@@ -117,9 +112,9 @@ class BrowsePresenter(private val browseContractView: BrowseContract.View) : Bro
         }
     }
 
-    override fun spider(serviceReference: ServiceReference) {
+    override fun spider() {
         val upnpService = androidUpnpService?.get() ?: return
-        val service = upnpService.registry.getService(serviceReference)
+        val service = upnpService.registry.getService(ServiceReference(serviceId))
         val spider: Flowable<DIDLContent> = ClingSpider(ClingBrowseImpl(service, upnpService.controlPoint))
                 .spider(this.containerId)
         spider

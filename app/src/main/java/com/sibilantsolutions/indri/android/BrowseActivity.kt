@@ -4,13 +4,12 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import com.sibilantsolutions.indri.android.SerializableDIDLContent.Companion.mapToSerializable
+import io.reactivex.Single
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_browse.*
 import kotlinx.android.synthetic.main.content_main.*
 import org.fourthline.cling.android.AndroidUpnpServiceImpl
-import org.fourthline.cling.model.ServiceReference
-import org.fourthline.cling.model.meta.Service
-import org.fourthline.cling.support.model.DIDLContent
 
 class BrowseActivity : AppCompatActivity() {
 
@@ -18,17 +17,15 @@ class BrowseActivity : AppCompatActivity() {
 
     companion object {
 
-        private const val EXTRA_DIDL_CONTENT = "EXTRA_DIDL_CONTENT"
-        private const val EXTRA_SERVICE_REFERENCE = "EXTRA_SERVICE_REFERENCE"
+        private const val EXTRA_CONTAINER_ID = "EXTRA_CONTAINER_ID"
+        private const val EXTRA_SERVICE_ID = "EXTRA_SERVICE_ID"
 
-        fun newIntent(containerId: String, didl: DIDLContent, service: Service<*, *>, ctx: Context): Intent {
+        fun newIntent(containerId: String, serviceId: String, ctx: Context): Intent {
             val intent = Intent(ctx, BrowseActivity::class.java)
 
-            val serializableDIDLContent = mapToSerializable(containerId, didl)
+            intent.putExtra("${ctx.packageName}.$EXTRA_CONTAINER_ID", containerId)
 
-            intent.putExtra("${ctx.packageName}.$EXTRA_DIDL_CONTENT", serializableDIDLContent)
-
-            intent.putExtra("${ctx.packageName}.$EXTRA_SERVICE_REFERENCE", service.reference.toString())
+            intent.putExtra("${ctx.packageName}.$EXTRA_SERVICE_ID", serviceId)
 
             return intent
         }
@@ -39,6 +36,8 @@ class BrowseActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_browse)
         setSupportActionBar(toolbar)
+
+        fab.setOnClickListener { browseContractPresenter.spider() }
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
@@ -53,14 +52,20 @@ class BrowseActivity : AppCompatActivity() {
                 Context.BIND_AUTO_CREATE
         )
 
-        val serializableDIDLContent = intent.getSerializableExtra("$packageName.$EXTRA_DIDL_CONTENT")
-                as SerializableDIDLContent
-        val serviceReference = ServiceReference(intent.getStringExtra("$packageName.$EXTRA_SERVICE_REFERENCE"))
+        val containerId = intent.getStringExtra("$packageName.$EXTRA_CONTAINER_ID")
+        val serviceId = intent.getStringExtra("$packageName.$EXTRA_SERVICE_ID")
 
-        browseContractPresenter.setContent(serializableDIDLContent, serviceReference)
+        class MyPair(val containerId: String, val serviceId: String)
 
-        fab.setOnClickListener { browseContractPresenter.spider(serviceReference) }
-
+        //HACK: The service isn't connected yet, i.e. the ServiceConnection hasn't been fired yet.
+        // This seems to happen on the UI thread after this point.  So, get off the main thread to
+        // let that finish.  Then get back on it, presumably after that's done.
+        Single.just(MyPair(containerId, serviceId))
+                //Get off the main thread to let it finish connecting the service.
+                .subscribeOn(Schedulers.computation())
+                //Get right back on so our task will get queued on main's looper.
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { it -> browseContractPresenter.browse(it.containerId, it.serviceId) }
     }
 
     override fun onDestroy() {

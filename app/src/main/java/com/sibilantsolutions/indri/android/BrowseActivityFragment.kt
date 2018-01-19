@@ -24,11 +24,11 @@ class BrowseActivityFragment : Fragment(), BrowseContract.View {
     lateinit var presenter: BrowseContract.Presenter
 
     //TODO: How to clean this up for lifecycle changes?
-    private val browseObservable: Observable<Pair<String, String>>
-    private val browseObserver: Observer<Pair<String, String>>
+    private val browseObservable: Observable<String>
+    private val browseObserver: Observer<String>
 
     init {
-        val subject = PublishSubject.create<Pair<String, String>>()
+        val subject = PublishSubject.create<String>()
         browseObservable = subject
         browseObserver = subject
     }
@@ -41,8 +41,6 @@ class BrowseActivityFragment : Fragment(), BrowseContract.View {
     private val myAdapter = MyAdapter(arrayListOf())
 
     inner class MyAdapter(val list: MutableList<BrowseViewModel.AbstractBaseContent>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-
-        lateinit var serviceId : String
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
 
@@ -66,7 +64,7 @@ class BrowseActivityFragment : Fragment(), BrowseContract.View {
             when (item) {
                 is BrowseViewModel.Container -> {
                     (holder as MyContainerViewHolder).bind(item)
-                    holder.itemView.setOnClickListener { browseObserver.onNext(Pair(item.id, serviceId)) } }
+                    holder.itemView.setOnClickListener { browseObserver.onNext(item.id) } }
                 is BrowseViewModel.Item -> {
                     (holder as MyItemViewHolder).bind(item)
                     holder.itemView.setOnClickListener { presenter.play(item.resValue) }
@@ -130,14 +128,13 @@ class BrowseActivityFragment : Fragment(), BrowseContract.View {
     }
 
     override fun render(browseViewModel: BrowseViewModel) {
-        myAdapter.serviceId = browseViewModel.serviceId
         myAdapter.list.clear()
         myAdapter.list.addAll(browseViewModel.containers)
         myAdapter.list.addAll(browseViewModel.items)
         myAdapter.notifyDataSetChanged()
     }
 
-    override fun browseObservable(): Observable<Pair<String, String>> =
+    override fun browseObservable(): Observable<String> =
             browseObservable.observeOn(Schedulers.io())
 
     override fun snackbar(msg: String) {

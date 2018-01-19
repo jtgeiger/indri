@@ -3,7 +3,7 @@ package com.sibilantsolutions.indri.android
 /**
  * Created by jt on 1/17/18.
  */
-class BrowseViewModel(val containers: List<Container>, val items: List<Item>, val serviceId: String) {
+class BrowseViewModel(val containers: List<Container>, val items: List<Item>) {
 
     abstract class AbstractBaseContent protected constructor(val id: String, val parentId: String, val title: String)
 
