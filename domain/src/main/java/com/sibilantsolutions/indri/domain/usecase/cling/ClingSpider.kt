@@ -1,50 +1,42 @@
 package com.sibilantsolutions.indri.domain.usecase.cling
 
-import com.sibilantsolutions.indri.domain.usecase.cling.ClingBrowse.BrowseResult
+import com.sibilantsolutions.indri.domain.model.IndriDidl
+import com.sibilantsolutions.indri.domain.model.IndriDidlContainer
 import io.reactivex.Flowable
 import io.reactivex.Single
-import org.fourthline.cling.support.model.DIDLContent
-import org.fourthline.cling.support.model.container.Container
-import org.fourthline.cling.support.model.container.StorageFolder
 
 /**
  * Created by jt on 1/13/18.
  */
 class ClingSpider(private val clingBrowse: ClingBrowse) {
 
-    fun spider(containerId: String): Flowable<DIDLContent> {
+    fun spider(containerId: String): Flowable<IndriDidl> {
 
         //Browse the root container.
-        val rootResult: Single<BrowseResult> = clingBrowse.browse(containerId)
+        val rootResult: Single<IndriDidl> = clingBrowse.browse(containerId)
 
-        val flowable: Flowable<BrowseResult> = rootResult.toFlowable()
+        val flowable: Flowable<IndriDidl> = rootResult.toFlowable()
 
         //Recurse on the root container to traverse the whole graph
-        val allResults: Flowable<BrowseResult> =
+        val allResults: Flowable<IndriDidl> =
                 flowable.flatMap { recurse(it) }
 
-        //For convenience, return the DIDLs instead of the BrowseResult.
-        return allResults.map { it.didl }
+        return allResults
     }
 
-    private fun recurse(browseResult: BrowseResult) : Flowable<BrowseResult> {
+    private fun recurse(browseResult: IndriDidl) : Flowable<IndriDidl> {
 
         //Get all the containers from the DIDL; there may be zero or more.
-        val didlContainers: Flowable<Container> =
-                Flowable.fromIterable(browseResult.didl.containers)
-
-        //Get just the StorageFolder containers; there may be zero or more.
-        val storageFolders: Flowable<StorageFolder> =
-                didlContainers
-                        .ofType(StorageFolder::class.java)
+        val didlContainers: Flowable<IndriDidlContainer> =
+                Flowable.fromIterable(browseResult.containers)
 
         //For each storage folder, browse into each of its children.
-        val children: Flowable<BrowseResult> =
-                storageFolders
-                        .flatMapSingle { clingBrowse.browse(it.id) }
+        val children: Flowable<IndriDidl> =
+                didlContainers
+                        .flatMapSingle { clingBrowse.browse(it.localId.localId) }
 
         //Now recurse for each of the children.  If there were zero children, the recursion stops.
-        val recurse: Flowable<BrowseResult> = children.flatMap { recurse(it) }
+        val recurse: Flowable<IndriDidl> = children.flatMap { recurse(it) }
 
         //Finally concat the source result with the tree of results for its children.
         return Flowable.concat(Flowable.just(browseResult), recurse)

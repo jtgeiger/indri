@@ -4,6 +4,7 @@ import android.content.ComponentName
 import android.content.ServiceConnection
 import android.os.IBinder
 import android.util.Log
+import com.sibilantsolutions.indri.domain.model.IndriDidl
 import com.sibilantsolutions.indri.domain.usecase.cling.ClingBrowseImpl
 import com.sibilantsolutions.indri.domain.usecase.cling.ClingPlayImpl
 import com.sibilantsolutions.indri.domain.usecase.cling.ClingSetUriImpl
@@ -14,9 +15,6 @@ import io.reactivex.schedulers.Schedulers
 import org.fourthline.cling.android.AndroidUpnpService
 import org.fourthline.cling.model.ServiceReference
 import org.fourthline.cling.model.types.UDAServiceType
-import org.fourthline.cling.support.model.DIDLContent
-import org.fourthline.cling.support.model.container.StorageFolder
-import org.fourthline.cling.support.model.item.MusicTrack
 import java.util.concurrent.TimeUnit
 
 /**
@@ -61,12 +59,10 @@ class BrowsePresenter(private val browseContractView: BrowseContract.View) : Bro
                 .subscribe(
                         {
                             browseContractView.render(BrowseViewModel(
-                                    it.didl.containers
-                                            .filterIsInstance(StorageFolder::class.java)
-                                            .map { BrowseViewModel.Container(it.id, it.parentID, it.title) },
-                                    it.didl.items
-                                            .filterIsInstance(MusicTrack::class.java)
-                                            .map { BrowseViewModel.Item(it.id, it.parentID, it.title, it.creator.orEmpty(), it.resources.first().value, it.resources.first().duration) }))
+                                    it.containers
+                                            .map { BrowseViewModel.Container(it.localId.localId, it.parentId.localId, it.title) },
+                                    it.items
+                                            .map { BrowseViewModel.Item(it.localId.localId, it.parentId.localId, it.title, it.creator, it.resValue, it.duration) }))
                         },
                         { Log.e("cling", "Browse problem:", it) }
                 )
@@ -115,7 +111,7 @@ class BrowsePresenter(private val browseContractView: BrowseContract.View) : Bro
     override fun spider() {
         val upnpService = androidUpnpService?.get() ?: return
         val service = upnpService.registry.getService(ServiceReference(serviceId))
-        val spider: Flowable<DIDLContent> = ClingSpider(ClingBrowseImpl(service, upnpService.controlPoint))
+        val spider: Flowable<IndriDidl> = ClingSpider(ClingBrowseImpl(service, upnpService.controlPoint))
                 .spider(this.containerId)
         spider
                 .subscribeOn(Schedulers.io())

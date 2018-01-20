@@ -3,9 +3,7 @@ package com.sibilantsolutions.indri.android
 import android.content.ComponentName
 import android.content.ServiceConnection
 import android.os.IBinder
-import android.util.Log
 import android.view.View
-import com.sibilantsolutions.indri.domain.usecase.cling.ClingBrowseImpl
 import com.sibilantsolutions.indri.domain.usecase.cling.ClingRegistryListener.ClingRegistryEventType.*
 import com.sibilantsolutions.indri.domain.usecase.cling.ClingRegistryListenerImpl
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -95,15 +93,7 @@ class SearchPresenter constructor(private val searchContractView: SearchContract
         val upnpService = androidUpnpService?.get()
 
         if (upnpService != null) {
-            ClingBrowseImpl(service, upnpService.controlPoint).browse("0")
-                    .map { it.didl }
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(
-                            { didl -> searchContractView.show("0", service.reference.toString()) },
-                            { t ->
-                                searchContractView.snackbar("Problem browsing")
-                                Log.e("cling", "Trouble browsing:", t)
-                            })
+            searchContractView.show("0", service.reference.toString())
         }
     }
 

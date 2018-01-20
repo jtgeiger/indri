@@ -1,16 +1,13 @@
 package com.sibilantsolutions.indri.domain.usecase.cling
 
+import com.sibilantsolutions.indri.domain.model.IndriDidl
 import io.reactivex.Single
-import org.fourthline.cling.model.action.ActionInvocation
-import org.fourthline.cling.support.model.DIDLContent
 
 /**
  * Created by jt on 1/13/18.
  */
 interface ClingBrowse {
 
-    fun browse(containerId: String) : Single<BrowseResult>
-
-    data class BrowseResult(val actionInvocation: ActionInvocation<*>, val didl: DIDLContent)
+    fun browse(containerId: String) : Single<IndriDidl>
 
 }
