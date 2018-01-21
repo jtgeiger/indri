@@ -4,12 +4,12 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import com.sibilantsolutions.indri.devicelibrary.clingAndroidUpnpServiceIntent
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_browse.*
 import kotlinx.android.synthetic.main.content_main.*
-import org.fourthline.cling.android.AndroidUpnpServiceImpl
 
 class BrowseActivity : AppCompatActivity() {
 
@@ -47,7 +47,7 @@ class BrowseActivity : AppCompatActivity() {
 
         // This will start the UPnP service if it wasn't already started
         applicationContext.bindService(
-                Intent(this, AndroidUpnpServiceImpl::class.java),
+                clingAndroidUpnpServiceIntent(this),
                 browseContractPresenter.sc(),
                 Context.BIND_AUTO_CREATE
         )
