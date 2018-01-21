@@ -1,15 +1,14 @@
 package com.sibilantsolutions.indri.android
 
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
+import com.sibilantsolutions.indri.devicelibrary.clingAndroidUpnpServiceIntent
+import com.sibilantsolutions.indri.devicelibrary.fixAndroidLogHandler
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
-import org.fourthline.cling.android.AndroidUpnpServiceImpl
-import org.fourthline.cling.android.FixedAndroidLogHandler
 
 class MainActivity : AppCompatActivity() {
 
@@ -27,15 +26,11 @@ class MainActivity : AppCompatActivity() {
         fab.setOnClickListener { searchContractPresenter.search() }
 
         // Fix the logging integration between java.util.logging and Android internal logging
-        org.seamless.util.logging.LoggingUtil.resetRootHandler(
-                FixedAndroidLogHandler()
-        )
-        // Now you can enable logging as needed for various categories of Cling:
-        // Logger.getLogger("org.fourthline.cling").setLevel(Level.FINEST);
+        fixAndroidLogHandler()
 
         // This will start the UPnP service if it wasn't already started
         applicationContext.bindService(
-                Intent(this, AndroidUpnpServiceImpl::class.java),
+                clingAndroidUpnpServiceIntent(this),
                 searchContractPresenter.sc(),
                 Context.BIND_AUTO_CREATE
         )

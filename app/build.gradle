@@ -43,4 +43,5 @@ dependencies {
     runtimeOnly 'org.eclipse.jetty:jetty-client:8.1.22.v20160922'
     runtimeOnly 'org.slf4j:slf4j-jdk14:1.7.25'
     implementation project(':domain')
+    implementation project(':device')
 }
