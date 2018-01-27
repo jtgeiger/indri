@@ -20,7 +20,10 @@ allprojects {
     repositories {
         google()
         jcenter()
-        mavenLocal()    //For Cling built and installed locally. TODO: Get from an online repo.
+        //The Cling libraries are not published to Maven Central; obtain them from the developer's repo:
+        maven {
+            url "http://4thline.org/m2"
+        }
     }
 }
 
