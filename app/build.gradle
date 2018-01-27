@@ -37,6 +37,11 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+    implementation 'io.reactivex.rxjava2:rxjava:2.1.9'
+    implementation 'io.reactivex.rxjava2:rxandroid:2.0.1'
+    implementation 'io.reactivex.rxjava2:rxkotlin:2.2.0'
+    implementation 'org.fourthline.cling:cling-core:2.1.1'
+
 //    Runtime dependencies for Cling service.
     runtimeOnly 'org.eclipse.jetty:jetty-server:8.1.22.v20160922'
     runtimeOnly 'org.eclipse.jetty:jetty-servlet:8.1.22.v20160922'
