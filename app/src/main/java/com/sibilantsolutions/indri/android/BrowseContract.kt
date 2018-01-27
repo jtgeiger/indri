@@ -1,6 +1,5 @@
 package com.sibilantsolutions.indri.android
 
-import android.content.ServiceConnection
 import io.reactivex.Observable
 
 /**
@@ -18,13 +17,14 @@ interface BrowseContract {
     }
 
     interface Presenter {
-        fun sc(): ServiceConnection
 
         fun browse(containerId: String, serviceId: String)
 
         fun play(resValue: String)
 
         fun spider()
+
+        fun onDestroy()
     }
 
 }

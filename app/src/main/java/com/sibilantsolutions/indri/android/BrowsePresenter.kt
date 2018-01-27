@@ -1,8 +1,5 @@
 package com.sibilantsolutions.indri.android
 
-import android.content.ComponentName
-import android.content.ServiceConnection
-import android.os.IBinder
 import android.util.Log
 import com.sibilantsolutions.indri.domain.model.IndriDidl
 import com.sibilantsolutions.indri.domain.usecase.cling.ClingBrowseImpl
@@ -10,7 +7,9 @@ import com.sibilantsolutions.indri.domain.usecase.cling.ClingPlayImpl
 import com.sibilantsolutions.indri.domain.usecase.cling.ClingSetUriImpl
 import com.sibilantsolutions.indri.domain.usecase.cling.ClingSpider
 import io.reactivex.Flowable
+import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import org.fourthline.cling.android.AndroidUpnpService
 import org.fourthline.cling.model.ServiceReference
@@ -20,32 +19,39 @@ import java.util.concurrent.TimeUnit
 /**
  * Created by jt on 11/11/17.
  */
-class BrowsePresenter(private val browseContractView: BrowseContract.View) : BrowseContract.Presenter {
+class BrowsePresenter(private val browseContractView: BrowseContract.View,
+                      serviceObservable: Observable<AndroidUpnpService>) : BrowseContract.Presenter {
+
+    private val compositeDisposable = CompositeDisposable()
 
     private var androidUpnpService: AndroidUpnpService? = null
 
     private lateinit var containerId: String
     private lateinit var serviceId: String
 
-    private val serviceConnection = object : ServiceConnection {
-
-        override fun onServiceConnected(className: ComponentName, service: IBinder) {
-
-            androidUpnpService = service as AndroidUpnpService
-        }
-
-        override fun onServiceDisconnected(className: ComponentName) {
-            androidUpnpService = null
-        }
-    }
-
     init {
-        //TODO: Dispose on lifecycle events.
-        browseContractView.browseObservable()
-                .subscribe({ browse(it, this.serviceId)})
+        compositeDisposable.addAll(
+                serviceObservable.subscribe(
+                        {
+                            androidUpnpService = it
+                        },
+                        {
+                            browseContractView.snackbar("Error with UPnP service")
+                            Log.e("indri", "Error with UPnP service", it)
+                        },
+                        {
+                            androidUpnpService = null
+                        }
+                ),
+                browseContractView.browseObservable().subscribe(
+                        { browse(it, this.serviceId)},
+                        {
+                            browseContractView.snackbar("Error browsing")
+                            Log.e("indri", "Error with browse", it)
+                        }
+                )
+        )
     }
-
-    override fun sc() = serviceConnection
 
     override fun browse(containerId: String, serviceId: String) {
         this.containerId = containerId
@@ -124,6 +130,10 @@ class BrowsePresenter(private val browseContractView: BrowseContract.View) : Bro
                     browseContractView.snackbar("Finished!")
                 })
 
+    }
+
+    override fun onDestroy() {
+        compositeDisposable.dispose()
     }
 
 }

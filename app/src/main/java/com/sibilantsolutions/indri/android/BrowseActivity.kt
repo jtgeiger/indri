@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import com.sibilantsolutions.indri.devicelibrary.clingAndroidUpnpServiceIntent
+import com.sibilantsolutions.indri.devicelibrary.ObservableServiceBinder
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -42,15 +42,10 @@ class BrowseActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         val browseContractView = fragment as BrowseActivityFragment
-        browseContractPresenter = BrowsePresenter(browseContractView)
-        browseContractView.presenter = browseContractPresenter as BrowsePresenter
+        browseContractPresenter = BrowsePresenter(browseContractView,
+                ObservableServiceBinder().bindService(this))
 
-        // This will start the UPnP service if it wasn't already started
-        applicationContext.bindService(
-                clingAndroidUpnpServiceIntent(this),
-                browseContractPresenter.sc(),
-                Context.BIND_AUTO_CREATE
-        )
+        browseContractView.presenter = browseContractPresenter as BrowsePresenter
 
         val containerId = intent.getStringExtra("$packageName.$EXTRA_CONTAINER_ID")
         val serviceId = intent.getStringExtra("$packageName.$EXTRA_SERVICE_ID")
@@ -70,8 +65,7 @@ class BrowseActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        // This will stop the UPnP service if nobody else is bound to it
-        applicationContext.unbindService(browseContractPresenter.sc())
+        browseContractPresenter.onDestroy()
     }
 
 }
