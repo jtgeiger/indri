@@ -47,7 +47,7 @@ class ClingBrowseImpl(private val service: Service<*, *>, private val controlPoi
 
         val items = didlContent.items
                 .filterIsInstance(MusicTrack::class.java)
-                .map { IndriDidlContent(ContainerId(containerId), ContentId(it.id), it.creator, it.title, it.resources.first().duration, it.resources.first().value) }
+                .map { IndriDidlContent(ContainerId(containerId), ContentId(it.id), it.creator.orEmpty(), it.title, it.resources.first().duration, it.resources.first().value) }
 
         return IndriDidl(ContainerId(containerId), containers, items)
     }
