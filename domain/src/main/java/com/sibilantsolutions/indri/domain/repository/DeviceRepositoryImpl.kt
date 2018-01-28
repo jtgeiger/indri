@@ -1,37 +1,35 @@
 package com.sibilantsolutions.indri.domain.repository
 
+import io.reactivex.BackpressureStrategy
 import io.reactivex.Flowable
-import io.reactivex.Maybe
-import org.fourthline.cling.model.meta.Device
-import org.fourthline.cling.model.types.UDN
-import org.fourthline.cling.registry.Registry
+import io.reactivex.subjects.ReplaySubject
 
 /**
 * Created by jt on 1/11/18.
 */
-class DeviceRepositoryImpl(private val registry: Registry) : DeviceRepository {
+class DeviceRepositoryImpl() : MutableDeviceRepository {
 
-    /**
-     * @param id String that will be treated as a UDN.
-     * @return Maybe<Device> that will have the Device if it could be found by UDN or else empty.
-     */
-    override fun findDevice(id: String): Maybe<Device<*, *, *>> {
-        return Maybe.fromCallable {
-            val udn = UDN.valueOf(id)
-            return@fromCallable registry.getDevice(udn, true)
-        }
+    private val subject = ReplaySubject
+            .create<DeviceRepository.IndriDeviceEvent>()
+            //Make sure that this subject obeys the threading rules; Cling callbacks can happen on
+            //any thread so we want to be sure to that the subject's emissions are well-behaved.
+            .toSerialized()
+
+    override fun fire(indriDeviceEvent: DeviceRepository.IndriDeviceEvent) {
+        subject.onNext(indriDeviceEvent)
     }
 
     /**
-     * Return all devices currently known to the registry.  This is a cold Flowable.
+     * Return all devices currently known to the registry.  This is backed by a ReplaySubject so
+     * late subscribers will see all events.
      *
      * Devices become known to the registry when they announce their presence on the network, which
      * may happen naturally but can also be solicited by broadcasting a search request.
      *
-     * @return Cold Flowable of known devices.
+     * @return Flowable of known devices.
      */
-    override fun devices() : Flowable<Device<*, *, *>> {
-        return Flowable.fromIterable(registry.devices)
+    override fun devices() : Flowable<DeviceRepository.IndriDeviceEvent> {
+        return subject.toFlowable(BackpressureStrategy.BUFFER)
     }
 
 }
